@@ -1,0 +1,6 @@
+{
+  "name": "刷题小助手",
+  "description": "专为快速认知学科知识点打造的高效刷题与速记系统，支持文本粘贴导入、JSON拖拽、背题/刷题双模式、错题本与键盘极速盲打。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
