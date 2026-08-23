@@ -109,22 +109,24 @@ export const BankCard: React.FC<BankCardProps> = ({
               <Download className="w-4 h-4" />
             </button>
             {isConfirmingDelete ? (
-              <div className="flex items-center space-x-1 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg animate-in fade-in duration-150">
-                <span className="text-[11px] text-rose-700 font-medium">删题库?</span>
+              <div className="flex items-center space-x-1.5 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg animate-in fade-in duration-150 shadow-2xs">
+                <span className="text-[11px] text-rose-700 font-medium mr-0.5">确认删除</span>
                 <button
                   onClick={() => {
                     setIsConfirmingDelete(false);
                     onDelete(name);
                   }}
-                  className="bg-rose-600 hover:bg-rose-700 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-xs"
+                  className="bg-rose-600 hover:bg-rose-700 text-white p-1 rounded-md transition-colors shadow-xs flex items-center justify-center"
+                  title="确认删除"
                 >
-                  确定
+                  <Check className="w-3 h-3 stroke-[2.5]" />
                 </button>
                 <button
                   onClick={() => setIsConfirmingDelete(false)}
-                  className="text-stone-500 hover:text-stone-800 px-1 py-0.5 text-[10px]"
+                  className="bg-stone-200/80 hover:bg-stone-300 text-stone-600 hover:text-stone-900 p-1 rounded-md transition-colors flex items-center justify-center"
+                  title="取消"
                 >
-                  取消
+                  <X className="w-3 h-3 stroke-[2.5]" />
                 </button>
               </div>
             ) : (

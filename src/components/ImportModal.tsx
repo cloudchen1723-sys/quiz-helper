@@ -19,14 +19,16 @@ interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImportSuccess: (bankName: string, questions: Question[]) => Promise<void>;
+  initialTab?: 'paste' | 'file' | 'presets' | 'prompt';
 }
 
 export const ImportModal: React.FC<ImportModalProps> = ({
   isOpen,
   onClose,
-  onImportSuccess
+  onImportSuccess,
+  initialTab = 'paste'
 }) => {
-  const [tab, setTab] = useState<'paste' | 'file' | 'presets' | 'prompt'>('paste');
+  const [tab, setTab] = useState<'paste' | 'file' | 'presets' | 'prompt'>(initialTab);
   const [bankName, setBankName] = useState('');
   const [rawText, setRawText] = useState('');
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
@@ -34,6 +36,12 @@ export const ImportModal: React.FC<ImportModalProps> = ({
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (isOpen && initialTab) {
+      setTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
 
   if (!isOpen) return null;
 
@@ -206,7 +214,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
             }`}
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span>内置精选学科题库</span>
+            <span>内置题库</span>
           </button>
           <button
             onClick={() => setTab('prompt')}
@@ -330,7 +338,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
           {tab === 'presets' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-stone-500">已自动扫描仓库中的内置 JSON 题库（放入 <code>src/data/banks/*.json</code> 即自动识别）：</p>
+                <p className="text-xs text-stone-500">选择需要载入的内置题库：</p>
               </div>
               
               <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
@@ -345,9 +353,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                         {preset.tags.map((tag, idx) => (
                           <span 
                             key={idx} 
-                            className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                              idx === 0 ? 'bg-stone-100 text-stone-700' : 'bg-emerald-50 text-emerald-700'
-                            }`}
+                            className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-stone-100 text-stone-600"
                           >
                             {tag}
                           </span>

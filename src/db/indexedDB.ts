@@ -1,8 +1,8 @@
 import { Question, StoredBank, WrongBook, BankStats } from '../types';
 import { getAutoLoadedJsonBanks } from '../data/jsonBankLoader';
 
-const DB_NAME = 'QuestionBankCognitionDB_v2';
-const DB_VERSION = 1;
+const DB_NAME = 'QuestionBankCognitionDB_v3';
+const DB_VERSION = 2;
 
 export class DBManager {
   private dbPromise: Promise<IDBDatabase> | null = null;
@@ -21,6 +21,9 @@ export class DBManager {
         if (!db.objectStoreNames.contains('wrongBooks')) {
           db.createObjectStore('wrongBooks', { keyPath: 'bankName' });
         }
+        if (!db.objectStoreNames.contains('masteredBooks')) {
+          db.createObjectStore('masteredBooks', { keyPath: 'bankName' });
+        }
         if (!db.objectStoreNames.contains('history')) {
           db.createObjectStore('history', { keyPath: 'id', autoIncrement: true });
         }
@@ -34,13 +37,7 @@ export class DBManager {
   }
 
   async initDefaultsIfEmpty(): Promise<void> {
-    const names = await this.getAllBankNames();
-    if (names.length === 0) {
-      const defaultBanks = getAutoLoadedJsonBanks();
-      for (const b of defaultBanks) {
-        await this.saveBank(b.name, b.questions);
-      }
-    }
+    // 默认保持未加载题库状态，由用户根据需要自主选择导入或添加题库
   }
 
   async getAllBankNames(): Promise<string[]> {
@@ -82,9 +79,10 @@ export class DBManager {
   async deleteBank(name: string): Promise<void> {
     const db = await this.open();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(['banks', 'wrongBooks'], 'readwrite');
+      const tx = db.transaction(['banks', 'wrongBooks', 'masteredBooks'], 'readwrite');
       tx.objectStore('banks').delete(name);
       tx.objectStore('wrongBooks').delete(name);
+      tx.objectStore('masteredBooks').delete(name);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -95,16 +93,21 @@ export class DBManager {
     const oldBank = await this.getBank(oldName);
     if (!oldBank) return;
     const oldWb = await this.getWrongBook(oldName);
+    const oldMb = await this.getMasteredBook(oldName);
 
     const db = await this.open();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(['banks', 'wrongBooks'], 'readwrite');
+      const tx = db.transaction(['banks', 'wrongBooks', 'masteredBooks'], 'readwrite');
       tx.objectStore('banks').delete(oldName);
       tx.objectStore('banks').put({ ...oldBank, name: newName });
       
       if (oldWb) {
         tx.objectStore('wrongBooks').delete(oldName);
         tx.objectStore('wrongBooks').put({ bankName: newName, data: oldWb });
+      }
+      if (oldMb && oldMb.length > 0) {
+        tx.objectStore('masteredBooks').delete(oldName);
+        tx.objectStore('masteredBooks').put({ bankName: newName, data: oldMb });
       }
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
@@ -129,6 +132,34 @@ export class DBManager {
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
     });
+  }
+
+  async getMasteredBook(bankName: string): Promise<number[]> {
+    try {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('masteredBooks', 'readonly');
+        const req = tx.objectStore('masteredBooks').get(bankName);
+        req.onsuccess = () => resolve(req.result ? req.result.data : []);
+        req.onerror = () => reject(req.error);
+      });
+    } catch {
+      return [];
+    }
+  }
+
+  async saveMasteredBook(bankName: string, data: number[]): Promise<void> {
+    try {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('masteredBooks', 'readwrite');
+        const req = tx.objectStore('masteredBooks').put({ bankName, data });
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    } catch (e) {
+      console.warn('saveMasteredBook failed:', e);
+    }
   }
 
   async calculateStats(questions: Question[]): Promise<BankStats> {

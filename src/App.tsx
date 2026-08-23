@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { dbManager } from './db/indexedDB';
 import { Question, StoredBank, WrongBook, SessionConfig, SessionSummary, BankStats } from './types';
+import { getAutoLoadedJsonBanks } from './data/jsonBankLoader';
 import { BankCard } from './components/BankCard';
 import { ConfigView } from './components/ConfigView';
 import { PracticeView } from './components/PracticeView';
@@ -23,11 +24,13 @@ export default function App() {
   const [bankStatsMap, setBankStatsMap] = useState<Record<string, BankStats>>({});
   const [bankDataMap, setBankDataMap] = useState<Record<string, Question[]>>({});
   const [wrongBooksMap, setWrongBooksMap] = useState<Record<string, WrongBook>>({});
+  const [masteredBooksMap, setMasteredBooksMap] = useState<Record<string, number[]>>({});
   
   // 视图模式: 'home' | 'config' | 'practice' | 'summary' | 'browse'
   const [currentView, setCurrentView] = useState<'home' | 'config' | 'practice' | 'summary' | 'browse'>('home');
   const [selectedBankName, setSelectedBankName] = useState<string>('');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importModalTab, setImportModalTab] = useState<'paste' | 'file' | 'presets' | 'prompt'>('paste');
   const [configValidationError, setConfigValidationError] = useState('');
 
   // 练习配置
@@ -58,6 +61,7 @@ export default function App() {
       const statsMap: Record<string, BankStats> = {};
       const dataMap: Record<string, Question[]> = {};
       const wbMap: Record<string, WrongBook> = {};
+      const mbMap: Record<string, number[]> = {};
 
       for (const name of names) {
         const bank = await dbManager.getBank(name);
@@ -67,11 +71,14 @@ export default function App() {
         }
         const wb = await dbManager.getWrongBook(name);
         wbMap[name] = wb || {};
+        const mb = await dbManager.getMasteredBook(name);
+        mbMap[name] = mb || [];
       }
 
       setBankStatsMap(statsMap);
       setBankDataMap(dataMap);
       setWrongBooksMap(wbMap);
+      setMasteredBooksMap(mbMap);
     } catch (e) {
       console.error('加载本地题库失败:', e);
     } finally {
@@ -138,7 +145,31 @@ export default function App() {
     await dbManager.saveWrongBook(selectedBankName, updatedWb);
   };
 
-  // 从错题本移除单题
+  // 切换题目已掌握/未练习状态
+  const handleToggleMastered = async (questionId: number, isMastered: boolean) => {
+    if (!selectedBankName) return;
+    const currentMb = masteredBooksMap[selectedBankName] || [];
+    const currentWb = wrongBooksMap[selectedBankName] || {};
+    
+    let nextMb: number[];
+    if (isMastered) {
+      nextMb = Array.from(new Set([...currentMb, questionId]));
+      // 如果原本在错题本中，同时移出错题本
+      if (currentWb[questionId]) {
+        const nextWb = { ...currentWb };
+        delete nextWb[questionId];
+        setWrongBooksMap((prev) => ({ ...prev, [selectedBankName]: nextWb }));
+        await dbManager.saveWrongBook(selectedBankName, nextWb);
+      }
+    } else {
+      nextMb = currentMb.filter((id) => id !== questionId);
+    }
+
+    setMasteredBooksMap((prev) => ({ ...prev, [selectedBankName]: nextMb }));
+    await dbManager.saveMasteredBook(selectedBankName, nextMb);
+  };
+
+  // 从错题本移除单题并恢复为未训练/未练习状态（作为误触补救）
   const handleRemoveFromWrongBook = async (questionId: number) => {
     if (!selectedBankName) return;
     const currentWb = wrongBooksMap[selectedBankName] || {};
@@ -146,6 +177,14 @@ export default function App() {
     delete nextWb[questionId];
     setWrongBooksMap((prev) => ({ ...prev, [selectedBankName]: nextWb }));
     await dbManager.saveWrongBook(selectedBankName, nextWb);
+
+    // 确保也不在已掌握中，彻底回到未训练/未练习状态
+    const currentMb = masteredBooksMap[selectedBankName] || [];
+    if (currentMb.includes(questionId)) {
+      const nextMb = currentMb.filter((id) => id !== questionId);
+      setMasteredBooksMap((prev) => ({ ...prev, [selectedBankName]: nextMb }));
+      await dbManager.saveMasteredBook(selectedBankName, nextMb);
+    }
   };
 
   // 从题库中彻底删除单题
@@ -154,14 +193,20 @@ export default function App() {
     const currentQuestions = bankDataMap[selectedBankName] || [];
     const updatedQuestions = currentQuestions.filter((q) => q.id !== questionId);
     
-    // 如果该题在错题本中，也一并清理
+    // 如果该题在错题本或已掌握中，也一并清理
     const currentWb = wrongBooksMap[selectedBankName] || {};
-    let nextWb = currentWb;
     if (currentWb[questionId]) {
-      nextWb = { ...currentWb };
+      const nextWb = { ...currentWb };
       delete nextWb[questionId];
       setWrongBooksMap((prev) => ({ ...prev, [selectedBankName]: nextWb }));
       await dbManager.saveWrongBook(selectedBankName, nextWb);
+    }
+
+    const currentMb = masteredBooksMap[selectedBankName] || [];
+    if (currentMb.includes(questionId)) {
+      const nextMb = currentMb.filter((id) => id !== questionId);
+      setMasteredBooksMap((prev) => ({ ...prev, [selectedBankName]: nextMb }));
+      await dbManager.saveMasteredBook(selectedBankName, nextMb);
     }
 
     await dbManager.saveBank(selectedBankName, updatedQuestions);
@@ -244,7 +289,7 @@ export default function App() {
   };
 
   // 完成练习
-  const handleFinishSession = (results: {
+  const handleFinishSession = async (results: {
     totalQuestions: number;
     correctCount: number;
     wrongCount: number;
@@ -255,6 +300,26 @@ export default function App() {
     const accuracyRate = results.totalQuestions > 0
       ? ((results.correctCount / results.totalQuestions) * 100).toFixed(1)
       : '0.0';
+
+    // 同步掌握记录：答对且不在错题中的标记为已掌握
+    if (selectedBankName && results.questionResults) {
+      const currentMb = masteredBooksMap[selectedBankName] || [];
+      const currentWb = wrongBooksMap[selectedBankName] || {};
+      const newMbSet = new Set(currentMb);
+
+      Object.entries(results.questionResults).forEach(([qIdStr, res]) => {
+        const qId = Number(qIdStr);
+        if (res === 'correct' && !currentWb[qId]) {
+          newMbSet.add(qId);
+        } else if (res === 'wrong') {
+          newMbSet.delete(qId);
+        }
+      });
+
+      const updatedMb = Array.from(newMbSet);
+      setMasteredBooksMap((prev) => ({ ...prev, [selectedBankName]: updatedMb }));
+      await dbManager.saveMasteredBook(selectedBankName, updatedMb);
+    }
 
     setLastSummary({
       bankName: selectedBankName,
@@ -393,7 +458,7 @@ export default function App() {
       )}
 
       {/* 主体工作区 */}
-      <main className="flex-1 flex flex-col max-w-4xl w-full mx-auto px-4 py-6">
+      <main className={`flex-1 flex flex-col max-w-4xl w-full mx-auto ${currentView === 'practice' ? 'px-2 sm:px-4 py-1.5 sm:py-4' : 'px-4 py-6'}`}>
         {isLoading ? (
           <div className="my-auto flex flex-col items-center justify-center space-y-3 py-16">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-900"></div>
@@ -436,21 +501,76 @@ export default function App() {
                 ))}
               </div>
             ) : (
-              /* 空状态 */
-              <div className="bg-white border border-stone-200/80 rounded-2xl p-12 text-center flex flex-col items-center justify-center shadow-xs">
-                <div className="w-12 h-12 bg-stone-100 rounded-full flex items-center justify-center mb-3 text-stone-400">
-                  <BookOpen className="w-6 h-6" />
+              /* 空状态：未加载题库 */
+              <div className="space-y-6">
+                <div className="bg-white border border-stone-200/80 rounded-2xl p-10 text-center flex flex-col items-center justify-center shadow-xs">
+                  <div className="w-12 h-12 bg-stone-100 rounded-full flex items-center justify-center mb-3 text-stone-400">
+                    <BookOpen className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-base font-bold text-stone-800 mb-1">未加载题库</h3>
+                  <p className="text-xs text-stone-400 max-w-sm mx-auto mb-6">
+                    当前尚未加载任何题库。您可以直接导入自定义文本/JSON，也可以选择载入内置题库。
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      onClick={() => {
+                        setImportModalTab('paste');
+                        setIsImportModalOpen(true);
+                      }}
+                      className="bg-stone-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl hover:bg-stone-800 shadow-xs transition-all flex items-center space-x-1.5 active:scale-95"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>导入题库 (文本/JSON)</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setImportModalTab('presets');
+                        setIsImportModalOpen(true);
+                      }}
+                      className="bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold px-4 py-2.5 rounded-xl border border-stone-200 transition-all flex items-center space-x-1.5 active:scale-95"
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>选择导入内置题库</span>
+                    </button>
+                  </div>
                 </div>
-                <h3 className="text-sm font-bold text-stone-800 mb-1">暂无题库</h3>
-                <p className="text-xs text-stone-400 max-w-sm mx-auto mb-5">
-                  可直接粘贴文本、JSON 或导入内置示例题库开始练习。
-                </p>
-                <button
-                  onClick={() => setIsImportModalOpen(true)}
-                  className="bg-stone-900 text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-stone-800 shadow-xs transition-all"
-                >
-                  导入题库
-                </button>
+
+                {/* 快捷内置题库预览与一键载入列表 */}
+                <div className="bg-white border border-stone-200/80 rounded-2xl p-5 shadow-xs">
+                  <div className="flex items-center justify-between mb-3.5">
+                    <div className="flex items-center space-x-2">
+                      <BookOpen className="w-4 h-4 text-stone-700" />
+                      <h4 className="text-sm font-bold text-stone-800">可载入的内置题库</h4>
+                    </div>
+                    <span className="text-[11px] text-stone-400">点击「载入」即可开始练习</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {getAutoLoadedJsonBanks().map((b) => (
+                      <div 
+                        key={b.name}
+                        className="border border-stone-200 rounded-xl p-3.5 hover:border-stone-300 transition-all flex flex-col justify-between bg-stone-50/40"
+                      >
+                        <div>
+                          <h5 className="text-xs font-bold text-stone-800 mb-1">{b.name}</h5>
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {b.tags.map((t, idx) => (
+                              <span key={idx} className="text-[10px] bg-stone-200/70 text-stone-600 px-1.5 py-0.5 rounded font-medium">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleImportSuccess(b.name, b.questions)}
+                          className="w-full mt-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium py-1.5 rounded-lg shadow-xs transition-all active:scale-95"
+                        >
+                          一键载入
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -460,6 +580,7 @@ export default function App() {
             bankName={selectedBankName}
             questions={bankDataMap[selectedBankName] || []}
             wrongBook={wrongBooksMap[selectedBankName] || {}}
+            masteredIds={masteredBooksMap[selectedBankName] || []}
             stats={bankStatsMap[selectedBankName] || { total: 0, single: 0, multiple: 0, judge: 0 }}
             onBack={() => setCurrentView('home')}
             onStartPractice={(mode) => {
@@ -470,6 +591,7 @@ export default function App() {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             onRemoveFromWrongBook={handleRemoveFromWrongBook}
+            onToggleMastered={handleToggleMastered}
             onDeleteQuestion={handleDeleteSingleQuestion}
           />
         ) : currentView === 'config' ? (
@@ -524,6 +646,7 @@ export default function App() {
       {/* 导入模态弹窗 */}
       <ImportModal
         isOpen={isImportModalOpen}
+        initialTab={importModalTab}
         onClose={() => setIsImportModalOpen(false)}
         onImportSuccess={handleImportSuccess}
       />

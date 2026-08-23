@@ -7,13 +7,16 @@ import {
   BookOpen, 
   Filter, 
   Check, 
+  X,
   Play, 
   Eye,
   SlidersHorizontal,
   ChevronDown,
   Trash2,
   CheckCheck,
-  RotateCcw
+  RotateCcw,
+  Clock,
+  HelpCircle
 } from 'lucide-react';
 import { Question, WrongBook, BankStats } from '../types';
 
@@ -21,10 +24,12 @@ interface BankBrowseViewProps {
   bankName: string;
   questions: Question[];
   wrongBook: WrongBook;
+  masteredIds?: number[];
   stats: BankStats;
   onBack: () => void;
   onStartPractice: (mode: 'test' | 'study') => void;
   onRemoveFromWrongBook?: (questionId: number) => Promise<void> | void;
+  onToggleMastered?: (questionId: number, isMastered: boolean) => Promise<void> | void;
   onDeleteQuestion?: (questionId: number) => Promise<void> | void;
 }
 
@@ -32,15 +37,17 @@ export const BankBrowseView: React.FC<BankBrowseViewProps> = ({
   bankName,
   questions,
   wrongBook,
+  masteredIds = [],
   stats,
   onBack,
   onStartPractice,
   onRemoveFromWrongBook,
+  onToggleMastered,
   onDeleteQuestion
 }) => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'single' | 'multiple' | 'judge'>('all');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'wrong' | 'clean'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'unpracticed' | 'mastered' | 'wrong'>('all');
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
   const [confirmDeleteQuestionId, setConfirmDeleteQuestionId] = useState<number | null>(null);
 
@@ -50,6 +57,26 @@ export const BankBrowseView: React.FC<BankBrowseViewProps> = ({
       setActionSuccessMsg(null);
     }, 2500);
   };
+
+  const masteredSet = useMemo(() => new Set(masteredIds), [masteredIds]);
+
+  // 判断单道题目的状态：仅错题(wrong) > 已掌握(mastered) > 未练习(unpracticed)
+  const getQuestionStatus = (id: number): 'wrong' | 'mastered' | 'unpracticed' => {
+    if (wrongBook[id]) return 'wrong';
+    if (masteredSet.has(id)) return 'mastered';
+    return 'unpracticed';
+  };
+
+  // 状态数量统计
+  const wrongCount = useMemo(() => {
+    return questions.filter((q) => !!wrongBook[q.id]).length;
+  }, [questions, wrongBook]);
+
+  const masteredCount = useMemo(() => {
+    return questions.filter((q) => !wrongBook[q.id] && masteredSet.has(q.id)).length;
+  }, [questions, wrongBook, masteredSet]);
+
+  const unpracticedCount = Math.max(0, questions.length - wrongCount - masteredCount);
 
   // 过滤题目
   const filteredQuestions = useMemo(() => {
@@ -70,16 +97,15 @@ export const BankBrowseView: React.FC<BankBrowseViewProps> = ({
         return false;
       }
 
-      // 错题状态过滤
-      const isWrong = !!wrongBook[q.id];
-      if (filterStatus === 'wrong' && !isWrong) return false;
-      if (filterStatus === 'clean' && isWrong) return false;
+      // 状态过滤 (未练习 / 已掌握 / 仅错题)
+      const status = getQuestionStatus(q.id);
+      if (filterStatus === 'wrong' && status !== 'wrong') return false;
+      if (filterStatus === 'mastered' && status !== 'mastered') return false;
+      if (filterStatus === 'unpracticed' && status !== 'unpracticed') return false;
 
       return true;
     });
-  }, [questions, wrongBook, searchKeyword, filterType, filterStatus]);
-
-  const wrongCount = Object.keys(wrongBook).length;
+  }, [questions, wrongBook, masteredSet, searchKeyword, filterType, filterStatus]);
 
   const getTypeLabel = (type: string) => {
     switch (type) {
@@ -162,10 +188,10 @@ export const BankBrowseView: React.FC<BankBrowseViewProps> = ({
           </div>
         </div>
 
-        {/* 底部精细过滤 (错题状态) */}
+        {/* 状态筛选工具栏 (未练习 / 已掌握 / 仅错题) */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-100 text-xs">
-          <div className="flex items-center space-x-2">
-            <span className="text-stone-400">状态筛选:</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-stone-400 mr-1">状态筛选:</span>
             <button
               onClick={() => setFilterStatus('all')}
               className={`px-2.5 py-1 rounded-lg font-medium border transition-colors ${
@@ -174,7 +200,29 @@ export const BankBrowseView: React.FC<BankBrowseViewProps> = ({
                   : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
               }`}
             >
-              全部
+              全部 ({questions.length})
+            </button>
+            <button
+              onClick={() => setFilterStatus('unpracticed')}
+              className={`px-2.5 py-1 rounded-lg font-medium border transition-colors flex items-center space-x-1 ${
+                filterStatus === 'unpracticed' 
+                  ? 'bg-stone-700 text-white border-stone-700' 
+                  : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
+              }`}
+            >
+              <Clock className="w-3 h-3 text-stone-400" />
+              <span>未练习 ({unpracticedCount})</span>
+            </button>
+            <button
+              onClick={() => setFilterStatus('mastered')}
+              className={`px-2.5 py-1 rounded-lg font-medium border transition-colors flex items-center space-x-1 ${
+                filterStatus === 'mastered' 
+                  ? 'bg-emerald-600 text-white border-emerald-600' 
+                  : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'
+              }`}
+            >
+              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+              <span>已掌握 ({masteredCount})</span>
             </button>
             <button
               onClick={() => setFilterStatus('wrong')}
@@ -184,18 +232,8 @@ export const BankBrowseView: React.FC<BankBrowseViewProps> = ({
                   : 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50'
               }`}
             >
-              <Flame className="w-3 h-3 fill-current" />
+              <Flame className="w-3 h-3 fill-current text-rose-500" />
               <span>仅错题 ({wrongCount})</span>
-            </button>
-            <button
-              onClick={() => setFilterStatus('clean')}
-              className={`px-2.5 py-1 rounded-lg font-medium border transition-colors ${
-                filterStatus === 'clean' 
-                  ? 'bg-emerald-600 text-white border-emerald-600' 
-                  : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'
-              }`}
-            >
-              无错题记录 ({questions.length - wrongCount})
             </button>
           </div>
 
@@ -216,8 +254,9 @@ export const BankBrowseView: React.FC<BankBrowseViewProps> = ({
       {/* 题目列表 (下滑式全景卡片) */}
       <div className="space-y-4">
         {filteredQuestions.length > 0 ? (
-          filteredQuestions.map((q, idx) => {
+          filteredQuestions.map((q) => {
             const wrongRecord = wrongBook[q.id];
+            const qStatus = getQuestionStatus(q.id);
             const typeBadge = getTypeLabel(q.type);
             const ansLetters = q.answer.split('').map(s => s.trim().toUpperCase());
 
@@ -226,8 +265,10 @@ export const BankBrowseView: React.FC<BankBrowseViewProps> = ({
                 key={q.id}
                 id={`q-item-${q.id}`}
                 className={`bg-white border rounded-2xl p-5 md:p-6 shadow-xs transition-all ${
-                  wrongRecord 
-                    ? 'border-rose-200/90 ring-1 ring-rose-100' 
+                  qStatus === 'wrong'
+                    ? 'border-rose-200/90 ring-1 ring-rose-100/70' 
+                    : qStatus === 'mastered'
+                    ? 'border-stone-200/90 hover:border-emerald-200'
                     : 'border-stone-200/80 hover:border-stone-300'
                 }`}
               >
@@ -242,66 +283,107 @@ export const BankBrowseView: React.FC<BankBrowseViewProps> = ({
                     </span>
                   </div>
 
-                  {/* 错题与练习频次标识 & 单题操作按钮组 */}
+                  {/* 状态标识 (未练习 / 已掌握 / 仅错题) & 操作按钮组 */}
                   <div className="flex items-center space-x-2 text-xs flex-wrap gap-y-1">
-                    {wrongRecord ? (
+                    {qStatus === 'wrong' ? (
+                      /* 仅错题状态 */
                       <div className="flex items-center space-x-1.5">
-                        <div className="bg-rose-50 border border-rose-100 text-rose-700 px-2.5 py-0.5 rounded-md flex items-center space-x-1 font-medium">
+                        <span className="text-rose-700 bg-rose-50 border border-rose-200/90 px-2.5 py-0.5 rounded-md font-medium text-[11px] flex items-center space-x-1">
                           <Flame className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-                          <span>历史答错 {wrongRecord.count} 次</span>
-                          {wrongRecord.streakCorrect > 0 && (
-                            <span className="text-emerald-600 font-mono ml-1">
+                          <span>累计 {wrongRecord?.count || 1} 次</span>
+                          {wrongRecord && wrongRecord.streakCorrect > 0 && (
+                            <span className="text-emerald-600 font-mono ml-1 font-semibold">
                               (连对 {wrongRecord.streakCorrect} 次)
                             </span>
                           )}
-                        </div>
+                        </span>
 
-                        {/* 移除错题标记按钮 */}
+                        {/* 移除错题标记 (恢复为未训练状态，作为误触补救) */}
                         {onRemoveFromWrongBook && (
                           <button
                             onClick={async () => {
                               await onRemoveFromWrongBook(q.id);
-                              showFeedback(`已成功将 #${q.id} 题移出错题本！`);
+                              showFeedback(`已将 #${q.id} 移出错题本，恢复为未训练`);
                             }}
-                            className="bg-stone-50 hover:bg-emerald-50 text-stone-600 hover:text-emerald-700 border border-stone-200 hover:border-emerald-300 px-2.5 py-0.5 rounded-md font-medium text-[11px] flex items-center space-x-1 transition-colors"
-                            title="该题已掌握，从错题本中移除"
+                            className="bg-stone-50 hover:bg-emerald-50 text-stone-600 hover:text-emerald-700 border border-stone-200 hover:border-emerald-300 px-2 py-0.5 rounded-md font-medium text-[10px] flex items-center space-x-1 transition-colors"
+                            title="移出错题本并恢复为未训练状态"
                           >
                             <Check className="w-3 h-3 text-emerald-600" />
-                            <span>移出错题本</span>
+                            <span>移出错题</span>
+                          </button>
+                        )}
+                      </div>
+                    ) : qStatus === 'mastered' ? (
+                      /* 已掌握状态 */
+                      <div className="flex items-center space-x-1.5">
+                        <span className="text-emerald-700 bg-emerald-50 border border-emerald-200/90 px-2.5 py-0.5 rounded-md font-medium text-[11px] flex items-center space-x-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>已掌握</span>
+                        </span>
+
+                        {onToggleMastered && (
+                          <button
+                            onClick={async () => {
+                              await onToggleMastered(q.id, false);
+                              showFeedback(`已将 #${q.id} 重置为未练习状态`);
+                            }}
+                            className="text-stone-400 hover:text-stone-700 hover:bg-stone-100 px-1.5 py-0.5 rounded text-[10px] transition-colors border border-transparent hover:border-stone-200"
+                            title="重置为未练习状态"
+                          >
+                            重置
                           </button>
                         )}
                       </div>
                     ) : (
-                      <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md font-medium text-[11px] flex items-center space-x-1">
-                        <CheckCircle2 className="w-3 h-3" />
-                        <span>掌握良好</span>
-                      </span>
+                      /* 未练习状态 */
+                      <div className="flex items-center space-x-1.5">
+                        <span className="text-stone-500 bg-stone-100 border border-stone-200/80 px-2.5 py-0.5 rounded-md font-medium text-[11px] flex items-center space-x-1">
+                          <Clock className="w-3 h-3 text-stone-400" />
+                          <span>未练习</span>
+                        </span>
+
+                        {onToggleMastered && (
+                          <button
+                            onClick={async () => {
+                              await onToggleMastered(q.id, true);
+                              showFeedback(`已将 #${q.id} 标记为已掌握`);
+                            }}
+                            className="bg-stone-50 hover:bg-emerald-50 text-stone-600 hover:text-emerald-700 border border-stone-200 hover:border-emerald-300 px-2 py-0.5 rounded-md font-medium text-[10px] flex items-center space-x-1 transition-colors"
+                            title="标记为已掌握"
+                          >
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            <span>已掌握</span>
+                          </button>
+                        )}
+                      </div>
                     )}
 
-                    {/* 从题库彻底删除该题 (垃圾桶图标与防误触确认) */}
+                    {/* 从题库彻底删除该题 */}
                     {onDeleteQuestion && (
                       confirmDeleteQuestionId === q.id ? (
-                        <div className="flex items-center space-x-1 ml-1 animate-in fade-in zoom-in-95 duration-150 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg">
-                          <span className="text-[11px] text-rose-700 font-medium mr-1">确定删除此题?</span>
+                        <div className="flex items-center space-x-1.5 ml-1 animate-in fade-in zoom-in-95 duration-150 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg shadow-2xs">
+                          <span className="text-[11px] text-rose-700 font-medium mr-0.5">确认移除</span>
                           <button
                             onClick={async (e) => {
                               e.stopPropagation();
                               await onDeleteQuestion(q.id);
                               setConfirmDeleteQuestionId(null);
-                              showFeedback(`已将题目 #${q.id} 从题库中彻底删除`);
+                              showFeedback(`已将题目 #${q.id} 从题库中移除`);
                             }}
-                            className="bg-rose-600 hover:bg-rose-700 text-white px-2 py-0.5 rounded text-[10px] font-bold transition-colors shadow-xs"
+                            className="bg-rose-600 hover:bg-rose-700 text-white p-1 rounded-md transition-colors shadow-xs flex items-center justify-center"
+                            title="确认移除"
                           >
-                            确定
+                            <Check className="w-3 h-3 stroke-[2.5]" />
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setConfirmDeleteQuestionId(null);
                             }}
-                            className="text-stone-500 hover:text-stone-800 px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors"
+                            className="bg-stone-200/80 hover:bg-stone-300 text-stone-600 hover:text-stone-900 p-1 rounded-md transition-colors flex items-center justify-center"
+                            title="取消"
                           >
-                            取消
+                            <X className="w-3 h-3 stroke-[2.5]" />
                           </button>
                         </div>
                       ) : (
