@@ -458,7 +458,7 @@ export default function App() {
       )}
 
       {/* 主体工作区 */}
-      <main className={`flex-1 flex flex-col max-w-4xl w-full mx-auto ${currentView === 'practice' ? 'px-2 sm:px-4 py-1.5 sm:py-4' : 'px-4 py-6'}`}>
+      <main className={`flex-1 flex flex-col max-w-4xl w-full mx-auto ${currentView === 'practice' ? 'px-3 sm:px-4 py-2 sm:py-4' : 'px-4 py-6'}`}>
         {isLoading ? (
           <div className="my-auto flex flex-col items-center justify-center space-y-3 py-16">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-900"></div>
@@ -502,75 +502,14 @@ export default function App() {
               </div>
             ) : (
               /* 空状态：未加载题库 */
-              <div className="space-y-6">
-                <div className="bg-white border border-stone-200/80 rounded-2xl p-10 text-center flex flex-col items-center justify-center shadow-xs">
-                  <div className="w-12 h-12 bg-stone-100 rounded-full flex items-center justify-center mb-3 text-stone-400">
-                    <BookOpen className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-base font-bold text-stone-800 mb-1">未加载题库</h3>
-                  <p className="text-xs text-stone-400 max-w-sm mx-auto mb-6">
-                    当前尚未加载任何题库。您可以直接导入自定义文本/JSON，也可以选择载入内置题库。
-                  </p>
-                  <div className="flex flex-wrap items-center justify-center gap-3">
-                    <button
-                      onClick={() => {
-                        setImportModalTab('paste');
-                        setIsImportModalOpen(true);
-                      }}
-                      className="bg-stone-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl hover:bg-stone-800 shadow-xs transition-all flex items-center space-x-1.5 active:scale-95"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>导入题库 (文本/JSON)</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setImportModalTab('presets');
-                        setIsImportModalOpen(true);
-                      }}
-                      className="bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold px-4 py-2.5 rounded-xl border border-stone-200 transition-all flex items-center space-x-1.5 active:scale-95"
-                    >
-                      <BookOpen className="w-3.5 h-3.5" />
-                      <span>选择导入内置题库</span>
-                    </button>
-                  </div>
+              <div className="bg-white border border-stone-200/80 rounded-2xl p-10 md:p-14 text-center flex flex-col items-center justify-center shadow-xs">
+                <div className="w-12 h-12 bg-stone-100 rounded-full flex items-center justify-center mb-3 text-stone-400">
+                  <BookOpen className="w-6 h-6" />
                 </div>
-
-                {/* 快捷内置题库预览与一键载入列表 */}
-                <div className="bg-white border border-stone-200/80 rounded-2xl p-5 shadow-xs">
-                  <div className="flex items-center justify-between mb-3.5">
-                    <div className="flex items-center space-x-2">
-                      <BookOpen className="w-4 h-4 text-stone-700" />
-                      <h4 className="text-sm font-bold text-stone-800">可载入的内置题库</h4>
-                    </div>
-                    <span className="text-[11px] text-stone-400">点击「载入」即可开始练习</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {getAutoLoadedJsonBanks().map((b) => (
-                      <div 
-                        key={b.name}
-                        className="border border-stone-200 rounded-xl p-3.5 hover:border-stone-300 transition-all flex flex-col justify-between bg-stone-50/40"
-                      >
-                        <div>
-                          <h5 className="text-xs font-bold text-stone-800 mb-1">{b.name}</h5>
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {b.tags.map((t, idx) => (
-                              <span key={idx} className="text-[10px] bg-stone-200/70 text-stone-600 px-1.5 py-0.5 rounded font-medium">
-                                {t}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleImportSuccess(b.name, b.questions)}
-                          className="w-full mt-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium py-1.5 rounded-lg shadow-xs transition-all active:scale-95"
-                        >
-                          一键载入
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <h3 className="text-base font-bold text-stone-800 mb-1">未加载题库</h3>
+                <p className="text-xs sm:text-sm text-stone-400 max-w-sm mx-auto">
+                  当前尚未加载任何题库，请点击右上角「导入题库」开始学习。
+                </p>
               </div>
             )}
           </div>

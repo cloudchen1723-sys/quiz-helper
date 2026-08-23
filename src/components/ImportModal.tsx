@@ -122,26 +122,68 @@ export const ImportModal: React.FC<ImportModalProps> = ({
     }
   };
 
-  const aiPromptText = `请帮我针对【某学科或章节主题，如：计算机原理-存储器与CPU】生成 10 道认知题目，直接返回标准的 JSON 数组格式（不要包含其它多余废话），格式规范如下：
+  const aiPromptText = `你是一个专业的高考与职业资格考试命题专家。请根据我提供的学习资料或知识点，将其整理并转换为符合规范的标准 JSON 题库。
+
+【输出规则要求】：
+1. 必须输出且仅输出一个合法的标准 JSON 数组（不要包含任何前后的多余解释说明，直接以 [ 开头，以 ] 结尾）。
+2. 每道题目必须包含以下字段：
+   - "id": 数字编号，从 1 开始递增。
+   - "type": 题目类型，只能为 "single"（单选）、"multiple"（多选）或 "judge"（判断）三者之一。
+   - "question": 题干文本，要求清晰明确。
+   - "options": 选项对象，键名统一为大写英文字母。
+     * 单选/多选：必须包含 "A", "B", "C", "D"（选项内容紧跟其后）。
+     * 判断题：固定为 {"A": "正确", "B": "错误"}。
+   - "answer": 正确答案大写英文字符串。
+     * 单选：如 "A"、"B"、"C"、"D"。
+     * 多选：按字母升序排列，如 "AB"、"ACD"、"ABCD"。
+     * 判断：固定为 "A"（代表正确）或 "B"（代表错误）。
+   - "analysis": 考点精讲与深度解析，要求讲清解题逻辑或错因。
+
+---------------------------------------------------------
+【标准输出示例（包含单选、多选、判断三类完整格式）】：
 [
   {
     "id": 1,
     "type": "single",
-    "question": "题目具体内容（ ）",
+    "question": "在关系型数据库中，用于唯一标识表中每一行记录的字段被称为：",
     "options": {
-      "A": "选项A内容",
-      "B": "选项B内容",
-      "C": "选项C内容",
-      "D": "选项D内容"
+      "A": "外键 (Foreign Key)",
+      "B": "主键 (Primary Key)",
+      "C": "索引 (Index)",
+      "D": "视图 (View)"
     },
-    "answer": "A",
-    "analysis": "核心考点解释，指出为什么选A以及易混淆概念的区别"
+    "answer": "B",
+    "analysis": "主键（Primary Key）是表中用于唯一确定一条记录的单个字段或字段组合，且不允许为 NULL。"
+  },
+  {
+    "id": 2,
+    "type": "multiple",
+    "question": "下列关于计算机网络 HTTP 协议与 HTTPS 协议的描述中，正确的有：",
+    "options": {
+      "A": "HTTP 默认端口为 80，HTTPS 默认端口为 443",
+      "B": "HTTPS 在 HTTP 的基础上引入了 SSL/TLS 加密层",
+      "C": "HTTP 的传输是明文的，安全性低于 HTTPS",
+      "D": "HTTPS 能够完全杜绝所有的网络钓鱼与伪造攻击"
+    },
+    "answer": "ABC",
+    "analysis": "A、B、C 选项均正确。D 选项错误：HTTPS 保证的是数据传输链路的加密和身份证书认证，无法从根本上完全阻止用户主动访问仿冒域名的钓鱼站点。"
+  },
+  {
+    "id": 3,
+    "type": "judge",
+    "question": "JavaScript 是一种编译型语言，必须在执行前编译为机器码二进制文件。",
+    "options": {
+      "A": "正确",
+      "B": "错误"
+    },
+    "answer": "B",
+    "analysis": "错误。JavaScript 是典型的解释型/即时编译（JIT）脚本语言，由浏览器或 Node.js 运行时动态解析执行，无需事先预编译为独立二进制文件。"
   }
 ]
-注意：
-- 单选题 type 为 "single"，answer 为单个字母如 "A"
-- 多选题 type 为 "multiple"，answer 为连续大写字母如 "ABCD"
-- 判断题 type 为 "judge"，options 为 {"A": "正确", "B": "错误"}，answer 为 "A" 或 "B"`;
+---------------------------------------------------------
+
+【请根据以下资料生成题目】：
+（在此粘贴你的教材、考点文档、论文或知识点笔记）`;
 
   const copyPromptToClipboard = () => {
     navigator.clipboard.writeText(aiPromptText);
