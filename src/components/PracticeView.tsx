@@ -426,13 +426,13 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
   return (
     <div className="flex-1 flex flex-col justify-between max-w-3xl mx-auto w-full pb-20 sm:pb-24 pt-1 sm:pt-2 animate-in fade-in duration-150">
       <div>
-        {/* 顶部状态与控制栏 */}
-        <div className="bg-white/95 backdrop-blur-md border border-stone-200 rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 shadow-2xs mb-2.5 sm:mb-3.5 flex items-center justify-between gap-2">
+        {/* 顶部状态与控制栏 (Things 3 精巧悬浮栏) */}
+        <div className="things-card px-3.5 py-2 sm:px-4 sm:py-2.5 bg-white rounded-[18px] border border-[#dfe3e8]/70 mb-3 sm:mb-4 flex items-center justify-between gap-2">
           {/* 左侧：返回 + 题号进度 + 题型 */}
           <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
             <button
               onClick={onQuit}
-              className="text-stone-400 hover:text-stone-800 p-1.5 rounded-lg hover:bg-stone-100 transition-colors"
+              className="text-[#838b96] hover:text-[#303336] p-1.5 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer"
               title="返回配置页"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -441,16 +441,16 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
               {currentIndex > 0 && (
                 <button
                   onClick={handlePrevQuestion}
-                  className="text-stone-400 hover:text-stone-800 p-1 rounded-md hover:bg-stone-100 transition-colors cursor-pointer"
+                  className="text-[#838b96] hover:text-[#303336] p-1 rounded-md hover:bg-stone-100 transition-colors cursor-pointer"
                   title="上一题 (修改手滑或重温)"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
               )}
-              <span className="font-mono text-xs sm:text-sm font-bold bg-stone-900 text-white px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg">
+              <span className="font-mono text-xs sm:text-sm font-bold bg-[#303336] text-white px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg">
                 {currentIndex + 1} / {questions.length}
               </span>
-              <span className="text-xs text-stone-400 hidden md:inline">#题号{currentQuestion.id}</span>
+              <span className="text-xs text-[#838b96] hidden md:inline">#题号{currentQuestion.id}</span>
               {typeBadge()}
             </div>
           </div>
@@ -585,7 +585,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
         </div>
 
         {/* 主题目展示卡片 */}
-        <div className="bg-white border border-stone-200/90 rounded-2xl shadow-xs p-4 sm:p-6 md:p-7">
+        <div className="things-card p-5 sm:p-7 md:p-8 bg-white rounded-[18px] border border-[#dfe3e8]/70">
           {/* 章节与知识点考点胶囊展示 */}
           {(currentQuestion.chapter || (Array.isArray(currentQuestion.tags) && currentQuestion.tags.length > 0)) && (
             <div className="flex flex-wrap items-center gap-1.5 mb-3 text-xs">

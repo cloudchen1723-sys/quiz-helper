@@ -6,7 +6,12 @@ import {
   Flame,
   ArrowLeft,
   Eye,
-  Play
+  Play,
+  Layers,
+  Database,
+  Settings,
+  Download,
+  HardDrive
 } from 'lucide-react';
 import { dbManager } from './db/indexedDB';
 import { Question, StoredBank, WrongBook, SessionConfig, SessionFilterMode, SessionSummary, BankStats, TrackMode, AnkiRating, DueCardSummary } from './types';
@@ -17,6 +22,7 @@ import { PracticeView } from './components/PracticeView';
 import { SummaryView } from './components/SummaryView';
 import { BankBrowseView } from './components/BankBrowseView';
 import { ImportModal } from './components/ImportModal';
+import { DataManagementModal } from './components/DataManagementModal';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { CognitiveDashboard } from './components/CognitiveDashboard';
@@ -36,6 +42,8 @@ export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'config' | 'practice' | 'summary' | 'browse'>('home');
   const [selectedBankName, setSelectedBankName] = useState<string>('');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isDataModalOpen, setIsDataModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [importModalTab, setImportModalTab] = useState<'paste' | 'file' | 'presets' | 'prompt'>('paste');
   const [configValidationError, setConfigValidationError] = useState('');
 
@@ -262,6 +270,16 @@ export default function App() {
     // 清理该题的 SM-2 闪卡记录
     await dbManager.deleteAnkiCard(`${selectedBankName}_${questionId}`);
 
+    await dbManager.saveBank(selectedBankName, updatedQuestions);
+    await refreshAllData();
+  };
+
+  // 原地修改/更新单题（异步写入 IndexedDB）
+  const handleUpdateQuestion = async (updatedQ: Question) => {
+    if (!selectedBankName) return;
+    const currentQuestions = bankDataMap[selectedBankName] || [];
+    const updatedQuestions = currentQuestions.map((q) => (q.id === updatedQ.id ? updatedQ : q));
+    
     await dbManager.saveBank(selectedBankName, updatedQuestions);
     await refreshAllData();
   };
@@ -497,134 +515,137 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f6f5f4] text-black/90 antialiased selection:bg-black selection:text-white">
-      {/* 顶部全局导航栏 (固定60px，Notion-like 发丝边框与幽灵按钮) */}
-      {currentView !== 'practice' && (
-        <header className="h-[60px] border-b border-black/[0.08] bg-white/90 backdrop-blur-md sticky top-0 z-40">
-          <div className="max-w-4xl w-full mx-auto px-4 h-full flex items-center justify-between gap-3">
-            {currentView === 'browse' ? (
-              <>
-                {/* 全览模式下的顶部导航条：直接代替题库工作台 */}
-                <div className="flex items-center space-x-2.5 min-w-0">
-                  <button
-                    onClick={() => setCurrentView('home')}
-                    className="p-1.5 text-black/50 hover:text-black hover:bg-black/[0.04] rounded-lg transition-colors shrink-0 cursor-pointer"
-                    title="返回题库列表"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </button>
-                  <div className="flex items-center space-x-2 min-w-0">
-                    <h2 className="text-sm sm:text-base font-semibold text-black tracking-tight truncate max-w-[170px] sm:max-w-xs md:max-w-md">
-                      {selectedBankName}
-                    </h2>
-                    <span className="text-xs bg-black/5 text-black/60 px-2 py-0.5 rounded-full font-medium shrink-0">
-                      {bankDataMap[selectedBankName]?.length || 0} 题
-                    </span>
-                    {Object.keys(wrongBooksMap[selectedBankName] || {}).length > 0 && (
-                      <span className="text-xs bg-rose-50 border border-rose-200/60 text-rose-700 px-2 py-0.5 rounded-full font-medium items-center space-x-1 shrink-0 hidden sm:inline-flex">
-                        <Flame className="w-3 h-3 text-rose-500 fill-rose-500" />
-                        <span>错题 {Object.keys(wrongBooksMap[selectedBankName] || {}).length}</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
+    <div className="min-h-screen flex flex-col bg-[#f2f5f7] text-[#303336] antialiased selection:bg-blue-100 selection:text-blue-900">
+      {/* 顶部全局导航栏 (Things 3 移动端 52px / 桌面 60px 极简毛玻璃与克制按钮) */}
+      {currentView !== 'practice' && currentView !== 'browse' && (
+        <header className="h-[52px] sm:h-[60px] border-b border-[#dfe3e8]/70 bg-[#f2f5f7]/90 backdrop-blur-md sticky top-0 z-40">
+          <div className="max-w-[960px] w-full mx-auto px-3 sm:px-6 h-full flex items-center justify-between gap-2.5 sm:gap-3">
+            <div 
+              className="flex items-center space-x-2 sm:space-x-2.5 cursor-pointer group select-none min-w-0"
+              onClick={() => setCurrentView('home')}
+            >
+              <div className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-lg bg-[#303336] text-white flex items-center justify-center shadow-xs transition-transform group-hover:scale-105 shrink-0">
+                <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-[16px] sm:text-[18px] font-bold text-[#303336] tracking-tight leading-none truncate">
+                  刷题小助手
+                </h1>
+                <p className="hidden sm:block text-[12px] text-[#838b96] leading-none mt-1 tracking-tight font-normal">
+                  自建题库 · 刷题 · 速记
+                </p>
+              </div>
+            </div>
 
-                <div className="flex items-center space-x-2 shrink-0">
-                  <button
-                    onClick={() => {
-                      setSessionConfig((prev) => ({ ...prev, practiceMode: 'study', filterMode: 'all' }));
-                      const questions = bankDataMap[selectedBankName] || [];
-                      setActiveQuestions(questions);
-                      setCurrentView('practice');
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className="bg-transparent hover:bg-black/[0.04] text-black/80 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1.5 border border-black/[0.08] cursor-pointer"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>速记</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSessionConfig((prev) => ({ ...prev, practiceMode: 'test', filterMode: 'all' }));
-                      const questions = bankDataMap[selectedBankName] || [];
-                      setActiveQuestions(questions);
-                      setCurrentView('practice');
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className="bg-[#0f766e] hover:bg-[#0d665f] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors flex items-center space-x-1.5 cursor-pointer"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>刷题</span>
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div 
-                  className="flex items-center space-x-2.5 cursor-pointer group select-none"
-                  onClick={() => setCurrentView('home')}
+            <div className="flex items-center space-x-1.5 sm:space-x-2 text-xs shrink-0">
+              {/* 主要操作：导入题库 (移动端精简为 "+ 导入" 高亮胶囊) */}
+              <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="h-8 sm:h-9 px-2.5 sm:px-4 bg-[#2576eb] hover:bg-[#1f65ca] text-white rounded-lg text-xs sm:text-[13px] font-medium flex items-center space-x-1 sm:space-x-1.5 shadow-sm hover:shadow transition-all duration-150 active:scale-[0.98] cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">导入题库</span>
+                <span className="sm:hidden">导入</span>
+              </button>
+
+              {/* 次级操作：设置面板下拉按钮 (移动端保持 32x32px) */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white border border-[#dfe3e8] hover:border-[#b8c2cc] text-[#303336] hover:bg-stone-50 flex items-center justify-center transition-colors shadow-2xs active:scale-[0.97] cursor-pointer"
+                  title="系统设置与数据备份"
                 >
-                  <div className="bg-black text-white p-1.5 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105">
-                    <BookOpen className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-sm sm:text-base font-semibold text-black tracking-tight leading-tight">
-                      刷题小助手
-                    </h1>
-                    <p className="text-[11px] text-black/50 leading-tight">
-                      自建题库 · 刷题 · 速记
-                    </p>
-                  </div>
-                </div>
+                  <Settings className="w-4 h-4 text-[#55606e]" />
+                </button>
 
-                <div className="flex items-center space-x-2 text-xs">
-                  <PWAInstallButton storagePersisted={storageStatus.persisted} />
+                {/* 设置菜单弹层 */}
+                {isSettingsOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsSettingsOpen(false)}
+                    />
+                    <div className="absolute right-0 top-10 sm:top-11 w-56 bg-white rounded-2xl shadow-xl border border-[#dfe3e8] py-2 z-50 popover-enter divide-y divide-[#dfe3e8]/60">
+                      <div className="px-3 py-1.5">
+                        <span className="text-[11px] font-semibold text-[#838b96] uppercase tracking-wider">
+                          数据与工具
+                        </span>
+                      </div>
 
-                  <button
-                    onClick={() => setIsImportModalOpen(true)}
-                    className="bg-transparent hover:bg-black/[0.04] active:bg-black/[0.08] text-black/80 border border-black/[0.08] px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-1.5 transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>导入</span>
-                  </button>
-                </div>
-              </>
-            )}
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            setIsSettingsOpen(false);
+                            setIsDataModalOpen(true);
+                          }}
+                          className="w-full text-left px-3.5 py-2 text-[13px] text-[#303336] hover:bg-stone-50 flex items-center space-x-2.5 transition-colors cursor-pointer"
+                        >
+                          <Database className="w-4 h-4 text-[#838b96]" />
+                          <span>数据管理与备份</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setIsSettingsOpen(false);
+                            setIsImportModalOpen(true);
+                          }}
+                          className="w-full text-left px-3.5 py-2 text-[13px] text-[#303336] hover:bg-stone-50 flex items-center space-x-2.5 transition-colors cursor-pointer"
+                        >
+                          <Upload className="w-4 h-4 text-[#838b96]" />
+                          <span>从文件恢复题库</span>
+                        </button>
+                      </div>
+
+                      <div className="pt-1 px-2">
+                        <PWAInstallButton storagePersisted={storageStatus.persisted} />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </header>
       )}
 
       {/* 主体工作区 */}
-      <main className={`flex-1 flex flex-col max-w-4xl w-full mx-auto ${currentView === 'practice' ? 'px-3 sm:px-4 py-2 sm:py-4' : 'px-4 py-5'}`}>
+      <main className={`flex-1 flex flex-col w-full mx-auto ${
+        currentView === 'browse'
+          ? 'max-w-5xl px-3 sm:px-6 py-4 sm:py-6'
+          : currentView === 'practice'
+          ? 'max-w-[960px] px-3 sm:px-4 py-2 sm:py-4'
+          : 'max-w-[960px] px-3.5 sm:px-6 py-3 sm:py-5'
+      }`}>
         {isLoading ? (
-          <div className="my-auto flex flex-col items-center justify-center space-y-3 py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black/80"></div>
-            <p className="text-xs text-black/40">正在加载本地题库...</p>
+          <div className="my-auto flex flex-col items-center justify-center space-y-3 py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2576eb]"></div>
+            <p className="text-[13px] text-[#838b96]">正在加载本地题库...</p>
           </div>
         ) : currentView === 'home' ? (
           /* 题库列表首页 */
-          <div className="space-y-4 animate-in fade-in duration-200">
-            {/* 模块三：学习热力图与认知看板（数据沉淀与激励） */}
-            <CognitiveDashboard refreshTrigger={dataVersion} />
+          <div className="space-y-3.5 sm:space-y-6 animate-in fade-in duration-200">
+            {/* 认知看板与热力图 */}
+            <CognitiveDashboard 
+              refreshTrigger={dataVersion} 
+              onOpenDataManagement={() => setIsDataModalOpen(true)}
+            />
 
             {/* 顶层状态横幅 */}
-            <div className="flex items-center justify-between py-1">
-              <div>
-                <h2 className="text-base font-semibold text-black/90 flex items-center gap-2">
-                  <span>我的题库</span>
-                  <span className="bg-black/5 text-black/60 text-xs px-2.5 py-0.5 rounded-full font-medium">
-                    {bankNames.length}
-                  </span>
+            <div className="flex items-baseline justify-between px-0.5 sm:px-1">
+              <div className="flex items-baseline space-x-2">
+                <h2 className="text-[15px] sm:text-[17px] font-bold text-[#303336] tracking-tight">
+                  我的题库
                 </h2>
-                <div className="flex items-center space-x-2 text-xs text-black/50 mt-0.5">
-                  <span>本地 IndexedDB 存储</span>
-                </div>
+                <span className="bg-[#e4e8ec] text-[#55606e] text-[11px] sm:text-[12px] font-semibold px-2 py-0.5 rounded-full">
+                  {bankNames.length}
+                </span>
               </div>
+              <span className="text-[12px] sm:text-[13px] text-[#838b96]">本地 IndexedDB 存储</span>
             </div>
 
             {/* 题库卡片网格 */}
             {bankNames.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-6">
                 {bankNames.map((name) => (
                   <BankCard
                     key={name}
@@ -643,14 +664,21 @@ export default function App() {
               </div>
             ) : (
               /* 空状态：未加载题库 */
-              <div className="bg-white border border-black/[0.08] rounded-xl p-10 md:p-14 text-center flex flex-col items-center justify-center">
-                <div className="w-10 h-10 bg-black/[0.04] rounded-full flex items-center justify-center mb-3 text-black/40">
-                  <BookOpen className="w-5 h-5" />
+              <div className="things-card p-10 md:p-16 text-center flex flex-col items-center justify-center">
+                <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mb-3 text-[#838b96]">
+                  <BookOpen className="w-6 h-6" />
                 </div>
-                <h3 className="text-sm font-semibold text-black/90 mb-1">未加载题库</h3>
-                <p className="text-xs text-black/50 max-w-sm mx-auto">
-                  当前尚未加载任何题库，请点击右上角「导入」开始学习。
+                <h3 className="text-[16px] font-bold text-[#303336] mb-1">未加载任何题库</h3>
+                <p className="text-[13px] text-[#838b96] max-w-sm mx-auto mb-5 leading-relaxed">
+                  导入自建学科题目或复习知识点，即可开启客观题盲打刷题与间隔重复背卡。
                 </p>
+                <button
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="h-10 px-5 bg-[#2576eb] hover:bg-[#1f65ca] text-white rounded-lg text-[13px] font-semibold flex items-center space-x-2 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>立即导入题库</span>
+                </button>
               </div>
             )}
           </div>
@@ -673,6 +701,7 @@ export default function App() {
             onRemoveFromWrongBook={handleRemoveFromWrongBook}
             onToggleMastered={handleToggleMastered}
             onDeleteQuestion={handleDeleteSingleQuestion}
+            onUpdateQuestion={handleUpdateQuestion}
           />
         ) : currentView === 'config' ? (
           /* 练习配置界面 */
@@ -734,6 +763,16 @@ export default function App() {
         initialTab={importModalTab}
         onClose={() => setIsImportModalOpen(false)}
         onImportSuccess={handleImportSuccess}
+      />
+
+      {/* 数据管理与清理模态弹窗 */}
+      <DataManagementModal
+        isOpen={isDataModalOpen}
+        onClose={() => setIsDataModalOpen(false)}
+        onDataChanged={async () => {
+          await refreshAllData();
+        }}
+        storagePersisted={storageStatus.persisted}
       />
 
       {/* 离线状态提示徽章 */}

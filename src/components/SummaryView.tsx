@@ -163,14 +163,14 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
   return (
     <div className="max-w-2xl mx-auto w-full my-auto animate-in fade-in duration-200 pb-12">
       {/* 统一的高质感沉浸式结算卡片 */}
-      <div className="bg-white border border-stone-200 rounded-2xl shadow-xs overflow-hidden">
+      <div className="things-card bg-white rounded-[18px] border border-[#dfe3e8]/70 overflow-hidden mb-6">
         {/* 顶部总览区 */}
-        <div className="p-6 md:p-8 text-center border-b border-stone-100 bg-linear-to-b from-stone-50/50 to-white">
-          <div className="w-13 h-13 bg-stone-900 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-xs">
+        <div className="p-6 md:p-8 text-center border-b border-[#dfe3e8]/70 bg-linear-to-b from-stone-50/50 to-white">
+          <div className="w-13 h-13 bg-[#303336] text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-xs">
             <Trophy className="w-6 h-6" />
           </div>
 
-          <h2 className="text-xl md:text-2xl font-bold text-stone-900 mb-1">
+          <h2 className="text-xl md:text-2xl font-bold text-[#303336] mb-1">
             {isFlashcard ? '闪卡复习完成' : '练习已完成'}
           </h2>
           

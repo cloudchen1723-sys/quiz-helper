@@ -428,38 +428,38 @@ export const ImportModal: React.FC<ImportModalProps> = ({
   const stats = parseResult?.success ? calculateQuestionBankStats(parseResult.questions) : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
-        className="bg-white border border-stone-200 w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="things-card bg-white border border-[#dfe3e8] w-full max-w-2xl rounded-[18px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+        <div className="px-6 py-4 border-b border-[#dfe3e8]/70 flex items-center justify-between bg-[#f8fafc]/50">
           <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-xl bg-stone-900 text-white flex items-center justify-center shadow-xs">
-              <Upload className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-[#303336] text-white flex items-center justify-center shadow-xs">
+              <Upload className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="font-semibold text-stone-800 text-base">导入题库与生成卡片</h3>
-              <p className="text-xs text-stone-400">支持智能文本识别、JSON拖拽、按章节打标及 AI Prompt 模板</p>
+              <h3 className="font-bold text-[#303336] text-[15px] tracking-tight">导入题库与生成卡片</h3>
+              <p className="text-[12px] text-[#838b96]">支持智能文本识别、JSON拖拽、按章节打标及 AI Prompt 模板</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="text-stone-400 hover:text-stone-700 p-1.5 rounded-lg hover:bg-stone-100 transition-colors"
+            className="text-[#838b96] hover:text-[#303336] p-1.5 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Navigation Tabs */}
-        <div className="px-6 pt-3 border-b border-stone-100 flex space-x-2 text-xs font-medium">
+        <div className="px-6 pt-3 border-b border-[#dfe3e8]/70 flex space-x-3 text-xs font-medium bg-white">
           <button
             onClick={() => setTab('paste')}
-            className={`pb-2.5 px-3 border-b-2 flex items-center space-x-1.5 transition-colors ${
+            className={`pb-2.5 px-3 border-b-2 flex items-center space-x-1.5 transition-colors cursor-pointer ${
               tab === 'paste' 
-                ? 'border-stone-900 text-stone-900 font-semibold' 
-                : 'border-transparent text-stone-500 hover:text-stone-800'
+                ? 'border-[#2576eb] text-[#2576eb] font-bold' 
+                : 'border-transparent text-[#838b96] hover:text-[#303336]'
             }`}
           >
             <Clipboard className="w-3.5 h-3.5" />
@@ -467,10 +467,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({
           </button>
           <button
             onClick={() => setTab('file')}
-            className={`pb-2.5 px-3 border-b-2 flex items-center space-x-1.5 transition-colors ${
+            className={`pb-2.5 px-3 border-b-2 flex items-center space-x-1.5 transition-colors cursor-pointer ${
               tab === 'file' 
-                ? 'border-stone-900 text-stone-900 font-semibold' 
-                : 'border-transparent text-stone-500 hover:text-stone-800'
+                ? 'border-[#2576eb] text-[#2576eb] font-bold' 
+                : 'border-transparent text-[#838b96] hover:text-[#303336]'
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
@@ -478,10 +478,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({
           </button>
           <button
             onClick={() => setTab('presets')}
-            className={`pb-2.5 px-3 border-b-2 flex items-center space-x-1.5 transition-colors ${
+            className={`pb-2.5 px-3 border-b-2 flex items-center space-x-1.5 transition-colors cursor-pointer ${
               tab === 'presets' 
-                ? 'border-stone-900 text-stone-900 font-semibold' 
-                : 'border-transparent text-stone-500 hover:text-stone-800'
+                ? 'border-[#2576eb] text-[#2576eb] font-bold' 
+                : 'border-transparent text-[#838b96] hover:text-[#303336]'
             }`}
           >
             <BookOpen className="w-3.5 h-3.5" />
@@ -489,13 +489,13 @@ export const ImportModal: React.FC<ImportModalProps> = ({
           </button>
           <button
             onClick={() => setTab('prompt')}
-            className={`pb-2.5 px-3 border-b-2 flex items-center space-x-1.5 transition-colors ${
+            className={`pb-2.5 px-3 border-b-2 flex items-center space-x-1.5 transition-colors cursor-pointer ${
               tab === 'prompt' 
-                ? 'border-stone-900 text-stone-900 font-semibold' 
-                : 'border-transparent text-stone-500 hover:text-stone-800'
+                ? 'border-[#2576eb] text-[#2576eb] font-bold' 
+                : 'border-transparent text-[#838b96] hover:text-[#303336]'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+            <Sparkles className="w-3.5 h-3.5 text-[#2576eb]" />
             <span>AI 生成提示词</span>
           </button>
         </div>
@@ -743,11 +743,11 @@ export const ImportModal: React.FC<ImportModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-stone-100 bg-stone-50/50 flex justify-between items-center">
+        <div className="px-6 py-4 border-t border-[#dfe3e8]/70 bg-white flex justify-between items-center">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-100 text-xs font-medium transition-colors"
+            className="px-4 py-2 rounded-xl border border-[#dfe3e8] text-[#55606e] hover:bg-stone-50 text-xs font-medium transition-colors cursor-pointer"
           >
             取消
           </button>
@@ -757,9 +757,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({
               type="button"
               disabled={!parseResult?.success || isSubmitting}
               onClick={handleConfirmImport}
-              className={`px-5 py-2.5 rounded-xl text-xs font-medium flex items-center space-x-1.5 transition-all shadow-xs ${
+              className={`px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm cursor-pointer ${
                 parseResult?.success && !isSubmitting
-                  ? 'bg-stone-900 text-white hover:bg-stone-800 active:scale-95'
+                  ? 'bg-[#2576eb] text-white hover:bg-[#1f65ca] active:scale-95'
                   : 'bg-stone-200 text-stone-400 cursor-not-allowed'
               }`}
             >

@@ -72,14 +72,10 @@ export class DailyActivityFacade {
   }
 
   /**
-   * 获取所有每日记录。如果全为空，自动植入几条演示打卡记录以激活视觉效果
+   * 获取所有每日记录
    */
   async getAllLogs(): Promise<DailyActivityLog[]> {
-    let logs = await dbManager.getAllDailyLogs();
-    if (logs.length === 0) {
-      logs = await this.seedInitialLogsIfEmpty();
-    }
-    return logs;
+    return await dbManager.getAllDailyLogs();
   }
 
   /**
@@ -203,14 +199,14 @@ export class DailyActivityFacade {
     const activeAnkiCards = ankiCards.filter((c) => c.bankName && bankNamesSet.has(c.bankName));
 
     // 长时记忆转化率
-    let retentionRate = 85; // 默认基准
+    let retentionRate = 0;
     if (totalFlashcardsCount > 0) {
-      retentionRate = Math.min(100, Math.max(50, Math.round((masteredCardsCount / totalFlashcardsCount) * 100)));
+      retentionRate = Math.min(100, Math.round((masteredCardsCount / totalFlashcardsCount) * 100));
     } else if (activeAnkiCards.length > 0) {
       const mastered = activeAnkiCards.filter((c) => c.status === 'mastered' || c.repetitions >= 3);
       retentionRate = Math.round((mastered.length / activeAnkiCards.length) * 100);
     } else if (totalQuestions > 0) {
-      retentionRate = Math.min(95, Math.max(60, overallAccuracyRate));
+      retentionRate = overallAccuracyRate;
     }
 
     return {
@@ -444,43 +440,6 @@ export class DailyActivityFacade {
       result[bName] = await this.getBankDueSummary(bName);
     }
     return result;
-  }
-
-  /**
-   * 初次运行时植入若干近期的打卡活跃样本，展示热力图与统计
-   */
-  private async seedInitialLogsIfEmpty(): Promise<DailyActivityLog[]> {
-    const today = new Date();
-    const sampleLogs: DailyActivityLog[] = [];
-
-    // 生成过去 20 天中 14 天活跃的样本数据
-    const activeOffsets = [0, 1, 2, 4, 5, 6, 7, 9, 10, 11, 13, 15, 17, 18];
-    for (const offset of activeOffsets) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - offset);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      const dateStr = `${y}-${m}-${day}`;
-
-      const totalCount = Math.floor(18 + Math.random() * 32);
-      const reviewCount = Math.floor(10 + Math.random() * 25);
-      const correctCount = Math.floor(totalCount * (0.82 + Math.random() * 0.14));
-      const timeSpentSeconds = Math.floor(360 + Math.random() * 900);
-
-      const log: DailyActivityLog = {
-        date: dateStr,
-        totalCount,
-        reviewCount,
-        correctCount,
-        timeSpentSeconds
-      };
-
-      await dbManager.upsertDailyLog(log);
-      sampleLogs.push(log);
-    }
-
-    return sampleLogs;
   }
 }
 

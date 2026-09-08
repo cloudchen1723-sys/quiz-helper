@@ -65,15 +65,18 @@ export class DBManager {
         }
       }
 
-      // 仅在首次打开且当前没有任何题库时才注入默认题库
+      // 仅在首次打开且当前没有任何题库且未选择跳过预设时才注入默认题库
+      const skipPresets = localStorage.getItem('exam_app_skip_presets') === 'true';
       if (!hasInitialized) {
         localStorage.setItem(INITIALIZED_FLAG, 'true');
-        const currentNames = await this.getAllBankNames();
-        if (currentNames.length === 0) {
-          const presets = getAutoLoadedJsonBanks();
-          const targetPreset = presets.find(p => p.name.includes('生物化学核心考点双轨题库'));
-          if (targetPreset && targetPreset.questions.length > 0) {
-            await this.saveBank(targetPreset.name, targetPreset.questions);
+        if (!skipPresets) {
+          const currentNames = await this.getAllBankNames();
+          if (currentNames.length === 0) {
+            const presets = getAutoLoadedJsonBanks();
+            const targetPreset = presets.find(p => p.name.includes('生物化学核心考点双轨题库'));
+            if (targetPreset && targetPreset.questions.length > 0) {
+              await this.saveBank(targetPreset.name, targetPreset.questions);
+            }
           }
         }
       }
@@ -371,6 +374,183 @@ export class DBManager {
     } catch (e) {
       console.warn('清理孤立闪卡记录异常:', e);
     }
+  }
+
+  /**
+   * 清空所有每日刷题打卡与活动日志 (重置热力图与 Streak)
+   */
+  async clearDailyLogs(): Promise<void> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const stores = ['daily_logs'];
+      if (db.objectStoreNames.contains('history')) stores.push('history');
+      const tx = db.transaction(stores, 'readwrite');
+      stores.forEach(s => tx.objectStore(s).clear());
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /**
+   * 清空所有错题本、已掌握记录和闪卡排程 (保留题库本身)
+   */
+  async clearAllProgress(): Promise<void> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['wrongBooks', 'masteredBooks', 'anki_cards'], 'readwrite');
+      tx.objectStore('wrongBooks').clear();
+      tx.objectStore('masteredBooks').clear();
+      tx.objectStore('anki_cards').clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /**
+   * 清空全部题库及所有关联的答题进度
+   */
+  async clearAllBanks(): Promise<void> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['banks', 'wrongBooks', 'masteredBooks', 'anki_cards'], 'readwrite');
+      tx.objectStore('banks').clear();
+      tx.objectStore('wrongBooks').clear();
+      tx.objectStore('masteredBooks').clear();
+      tx.objectStore('anki_cards').clear();
+      tx.oncomplete = () => {
+        localStorage.setItem('exam_app_skip_presets', 'true');
+        resolve();
+      };
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /**
+   * 彻底清空所有本地数据并重置为全新初始状态
+   */
+  async clearAllData(): Promise<void> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const allStores = Array.from(db.objectStoreNames);
+      const tx = db.transaction(allStores, 'readwrite');
+      allStores.forEach((s) => tx.objectStore(s).clear());
+      tx.oncomplete = () => {
+        localStorage.setItem('exam_app_default_preset_initialized_v3', 'true');
+        localStorage.setItem('exam_app_skip_presets', 'true');
+        resolve();
+      };
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /**
+   * 重新载入内置示例题库 (生化核心考点双轨题库)
+   */
+  async restorePresetBank(): Promise<string | null> {
+    const presets = getAutoLoadedJsonBanks();
+    const targetPreset = presets.find(p => p.name.includes('生物化学核心考点双轨题库'));
+    if (targetPreset && targetPreset.questions.length > 0) {
+      await this.saveBank(targetPreset.name, targetPreset.questions);
+      localStorage.removeItem('exam_app_skip_presets');
+      return targetPreset.name;
+    }
+    return null;
+  }
+
+  /**
+   * 导出全部数据备份为 JSON 对象
+   */
+  async exportAllData(): Promise<{
+    version: number;
+    exportedAt: string;
+    banks: StoredBank[];
+    wrongBooks: { bankName: string; data: WrongBook }[];
+    masteredBooks: { bankName: string; data: number[] }[];
+    dailyLogs: DailyActivityLog[];
+    ankiCards: AnkiCardState[];
+  }> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(
+        ['banks', 'wrongBooks', 'masteredBooks', 'daily_logs', 'anki_cards'],
+        'readonly'
+      );
+
+      let banks: StoredBank[] = [];
+      let wrongBooks: { bankName: string; data: WrongBook }[] = [];
+      let masteredBooks: { bankName: string; data: number[] }[] = [];
+      let dailyLogs: DailyActivityLog[] = [];
+      let ankiCards: AnkiCardState[] = [];
+
+      tx.objectStore('banks').getAll().onsuccess = (e) => {
+        banks = ((e.target as IDBRequest).result as StoredBank[]) || [];
+      };
+      tx.objectStore('wrongBooks').getAll().onsuccess = (e) => {
+        wrongBooks = ((e.target as IDBRequest).result as { bankName: string; data: WrongBook }[]) || [];
+      };
+      tx.objectStore('masteredBooks').getAll().onsuccess = (e) => {
+        masteredBooks = ((e.target as IDBRequest).result as { bankName: string; data: number[] }[]) || [];
+      };
+      tx.objectStore('daily_logs').getAll().onsuccess = (e) => {
+        dailyLogs = ((e.target as IDBRequest).result as DailyActivityLog[]) || [];
+      };
+      tx.objectStore('anki_cards').getAll().onsuccess = (e) => {
+        ankiCards = ((e.target as IDBRequest).result as AnkiCardState[]) || [];
+      };
+
+      tx.oncomplete = () => {
+        resolve({
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          banks,
+          wrongBooks,
+          masteredBooks,
+          dailyLogs,
+          ankiCards
+        });
+      };
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /**
+   * 从备份 JSON 恢复全部数据
+   */
+  async importBackupData(backup: any): Promise<void> {
+    if (!backup || typeof backup !== 'object') {
+      throw new Error('无效的备份文件数据');
+    }
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(
+        ['banks', 'wrongBooks', 'masteredBooks', 'daily_logs', 'anki_cards'],
+        'readwrite'
+      );
+
+      if (Array.isArray(backup.banks)) {
+        const store = tx.objectStore('banks');
+        backup.banks.forEach((b: StoredBank) => store.put(b));
+      }
+      if (Array.isArray(backup.wrongBooks)) {
+        const store = tx.objectStore('wrongBooks');
+        backup.wrongBooks.forEach((wb: any) => store.put(wb));
+      }
+      if (Array.isArray(backup.masteredBooks)) {
+        const store = tx.objectStore('masteredBooks');
+        backup.masteredBooks.forEach((mb: any) => store.put(mb));
+      }
+      if (Array.isArray(backup.dailyLogs)) {
+        const store = tx.objectStore('daily_logs');
+        backup.dailyLogs.forEach((dl: DailyActivityLog) => store.put(dl));
+      }
+      if (Array.isArray(backup.ankiCards)) {
+        const store = tx.objectStore('anki_cards');
+        backup.ankiCards.forEach((ac: AnkiCardState) => store.put(ac));
+      }
+
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
   }
 
   /**

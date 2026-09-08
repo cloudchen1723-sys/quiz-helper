@@ -1,0 +1,608 @@
+{
+  "version": 1,
+  "exportedAt": "2026-09-08T03:15:00.000Z",
+  "description": "做题记录与学习进度测试备份文件 (包含题库、错题本、已掌握记录、15天打卡热力图与Anki卡片)",
+  "banks": [
+    {
+      "name": "生物化学核心考点双轨题库",
+      "createdAt": 1788000000000,
+      "updatedAt": 1788800000000,
+      "data": [
+        {
+          "id": 1,
+          "type": "single",
+          "chapter": "第一章 蛋白质化学",
+          "question": "下列哪种氨基酸侧链含有咪唑基，在生理pH下具有缓冲能力？",
+          "options": {
+            "A": "赖氨酸",
+            "B": "组氨酸",
+            "C": "精氨酸",
+            "D": "天冬氨酸"
+          },
+          "answer": "B",
+          "analysis": "组氨酸侧链咪唑基pKa约6.0，是体内唯一在近中性pH有显著缓冲作用的氨基酸残基。",
+          "tags": ["第一章 蛋白质化学", "氨基酸性质"]
+        },
+        {
+          "id": 2,
+          "type": "single",
+          "chapter": "第一章 蛋白质化学",
+          "question": "维系蛋白质α-螺旋结构的主要化学键是：",
+          "options": {
+            "A": "肽键",
+            "B": "二硫键",
+            "C": "氢键",
+            "D": "疏水键"
+          },
+          "answer": "C",
+          "analysis": "α-螺旋依靠主链C=O与N-H之间形成的氢键维持稳定，每圈约3.6个残基。",
+          "tags": ["第一章 蛋白质化学", "二级结构"]
+        },
+        {
+          "id": 3,
+          "type": "single",
+          "chapter": "第二章 酶学",
+          "question": "酶催化反应中，米氏常数Km在数值上等于：",
+          "options": {
+            "A": "酶促反应速度达Vmax时的底物浓度",
+            "B": "酶促反应速度达Vmax一半时的底物浓度",
+            "C": "酶与底物亲和力的倒数",
+            "D": "反应达到平衡时的底物浓度"
+          },
+          "answer": "B",
+          "analysis": "Km的定义为反应速度等于1/2 Vmax时所对应的底物浓度，反映酶与底物亲和力（Km越小亲和力越大）。",
+          "tags": ["第二章 酶学", "酶动力学"]
+        },
+        {
+          "id": 4,
+          "type": "single",
+          "chapter": "第三章 糖代谢",
+          "question": "糖酵解过程中，由1分子葡萄糖净生成的ATP数目为：",
+          "options": {
+            "A": "1",
+            "B": "2",
+            "C": "3",
+            "D": "4"
+          },
+          "answer": "B",
+          "analysis": "糖酵解共产生4个ATP（底物水平磷酸化），但消耗2个，净产2个ATP，同时生成2个NADH。",
+          "tags": ["第三章 糖代谢", "糖酵解"]
+        },
+        {
+          "id": 5,
+          "type": "single",
+          "chapter": "第三章 糖代谢",
+          "question": "三羧酸循环中，催化底物水平磷酸化生成GTP的酶是：",
+          "options": {
+            "A": "异柠檬酸脱氢酶",
+            "B": "α-酮戊二酸脱氢酶",
+            "C": "琥珀酰CoA合成酶",
+            "D": "苹果酸脱氢酶"
+          },
+          "answer": "C",
+          "analysis": "琥珀酰CoA合成酶催化琥珀酰CoA→琥珀酸，同时使GDP+GTP，是TCA中唯一的底物水平磷酸化步骤。",
+          "tags": ["第三章 糖代谢", "三羧酸循环"]
+        },
+        {
+          "id": 6,
+          "type": "single",
+          "chapter": "第四章 脂质代谢",
+          "question": "脂肪酸β-氧化中，每循环一次直接生成的产物不包括：",
+          "options": {
+            "A": "1个乙酰CoA",
+            "B": "1个FADH2",
+            "C": "1个NADH",
+            "D": "1个GTP"
+          },
+          "answer": "D",
+          "analysis": "每轮β-氧化生成1乙酰CoA、1FADH2和1NADH，不直接生成GTP，GTP来自三羧酸循环。",
+          "tags": ["第四章 脂质代谢", "脂肪酸氧化"]
+        },
+        {
+          "id": 7,
+          "type": "single",
+          "chapter": "第三章 糖代谢",
+          "question": "下列哪个酶是糖异生的关键酶，而非糖酵解的酶？",
+          "options": {
+            "A": "己糖激酶",
+            "B": "磷酸果糖激酶-1",
+            "C": "果糖-1,6-二磷酸酶",
+            "D": "丙酮酸激酶"
+          },
+          "answer": "C",
+          "analysis": "果糖-1,6-二磷酸酶催化果糖-1,6-二磷酸→果糖-6-磷酸，是糖异生特有的不可逆酶，糖酵解对应的是磷酸果糖激酶-1。",
+          "tags": ["第三章 糖代谢", "糖异生"]
+        },
+        {
+          "id": 8,
+          "type": "single",
+          "chapter": "第六章 核酸化学",
+          "question": "DNA双螺旋结构中，碱基对A-T之间形成几个氢键？",
+          "options": {
+            "A": "1",
+            "B": "2",
+            "C": "3",
+            "D": "4"
+          },
+          "answer": "B",
+          "analysis": "A与T之间形成2个氢键，G与C之间形成3个氢键，因此GC含量高的DNA热稳定性更高。",
+          "tags": ["第六章 核酸化学", "DNA结构"]
+        },
+        {
+          "id": 9,
+          "type": "single",
+          "chapter": "第八章 生物氧化",
+          "question": "氧化磷酸化过程中，电子传递链的最终电子受体是：",
+          "options": {
+            "A": "NAD+",
+            "B": "FAD",
+            "C": "细胞色素c",
+            "D": "O2"
+          },
+          "answer": "D",
+          "analysis": "O2是最终电子受体，接受电子后与H+生成水；若O2缺乏则电子传递链受阻，ATP合成减少。",
+          "tags": ["第八章 生物氧化", "电子传递链"]
+        },
+        {
+          "id": 10,
+          "type": "single",
+          "chapter": "第五章 氨基酸代谢",
+          "question": "下列哪种维生素是转氨酶的辅酶成分？",
+          "options": {
+            "A": "维生素B1",
+            "B": "维生素B2",
+            "C": "维生素B6",
+            "D": "维生素B12"
+          },
+          "answer": "C",
+          "analysis": "维生素B6（吡哆醛）生成磷酸吡哆醛，是转氨酶和脱羧酶的辅酶，参与氨基酸代谢。",
+          "tags": ["第五章 氨基酸代谢", "辅酶与维生素"]
+        },
+        {
+          "id": 11,
+          "type": "multiple",
+          "chapter": "第一章 蛋白质化学",
+          "question": "下列关于蛋白质三级结构的叙述，正确的有：",
+          "options": {
+            "A": "由一条多肽链的所有原子在三维空间的整体排布",
+            "B": "主要由氨基酸侧链间的疏水作用、离子键、氢键等维系",
+            "C": "三级结构一旦形成即不再发生构象变化",
+            "D": "具有生物活性的球蛋白通常呈三级结构"
+          },
+          "answer": "ABD",
+          "analysis": "三级结构是整条肽链折叠成的特定构象，由侧链相互作用稳定，但构象可在生理条件下发生一定变化（如别构效应），故C错误。",
+          "tags": ["第一章 蛋白质化学", "高级结构"]
+        },
+        {
+          "id": 12,
+          "type": "multiple",
+          "chapter": "第三章 糖代谢",
+          "question": "哪些物质属于高能磷酸化合物？",
+          "options": {
+            "A": "ATP",
+            "B": "磷酸肌酸",
+            "C": "葡萄糖-6-磷酸",
+            "D": "乙酰CoA",
+            "E": "1,3-二磷酸甘油酸"
+          },
+          "answer": "ABDE",
+          "analysis": "高能磷酸化合物含高能键（如磷酐键或硫酯键）。葡萄糖-6-磷酸为普通磷酸酯，能量较低，不属于高能化合物。",
+          "tags": ["第三章 糖代谢", "能量代谢"]
+        },
+        {
+          "id": 13,
+          "type": "multiple",
+          "chapter": "第三章 糖代谢",
+          "question": "下列哪些反应发生在线粒体基质中？",
+          "options": {
+            "A": "三羧酸循环",
+            "B": "脂肪酸β-氧化",
+            "C": "糖酵解",
+            "D": "氧化磷酸化的电子传递",
+            "E": "丙酮酸氧化脱羧"
+          },
+          "answer": "ABE",
+          "analysis": "糖酵解在胞质，电子传递链在线粒体内膜（电子传递本身）而非基质，但基质中发生TCA、β-氧化和丙酮酸脱氢酶复合体反应。",
+          "tags": ["第三章 糖代谢", "细胞定位"]
+        },
+        {
+          "id": 14,
+          "type": "multiple",
+          "chapter": "第二章 酶学",
+          "question": "关于酶活性中心的描述，正确的有：",
+          "options": {
+            "A": "由必需基团组成",
+            "B": "与底物特异性结合",
+            "C": "常位于酶分子表面疏水区域",
+            "D": "构象改变可影响活性",
+            "E": "一般包含催化基团和结合基团"
+          },
+          "answer": "ABDE",
+          "analysis": "活性中心一般在酶分子表面的裂隙或凹穴中，但多为亲水/疏水适当环境，并非必须\"疏水区域\"，C说法不准确，其余正确。",
+          "tags": ["第二章 酶学", "活性中心"]
+        },
+        {
+          "id": 15,
+          "type": "judge",
+          "chapter": "第二章 酶学",
+          "question": "酶促反应中，竞争性抑制剂可通过增加底物浓度来解除抑制。",
+          "options": {
+            "A": "正确",
+            "B": "错误"
+          },
+          "answer": "A",
+          "analysis": "竞争性抑制剂与底物竞争同一活性中心，增加底物浓度可提高底物占据活性中心的概率，从而降低抑制程度。",
+          "tags": ["第二章 酶学", "抑制剂"]
+        },
+        {
+          "id": 16,
+          "type": "judge",
+          "chapter": "第三章 糖代谢",
+          "question": "糖原合成过程中，葡萄糖直接与糖原引物结合形成α-1,4-糖苷键。",
+          "options": {
+            "A": "正确",
+            "B": "错误"
+          },
+          "answer": "B",
+          "analysis": "葡萄糖需先活化为UDP-葡萄糖，再由糖原合酶催化UDP-葡萄糖与引物末端连接，并非直接结合。",
+          "tags": ["第三章 糖代谢", "糖原合成"]
+        },
+        {
+          "id": 17,
+          "type": "judge",
+          "chapter": "第四章 脂质代谢",
+          "question": "脂肪酸的合成主要发生在线粒体基质中。",
+          "options": {
+            "A": "正确",
+            "B": "错误"
+          },
+          "answer": "B",
+          "analysis": "脂肪酸合成发生在胞质，由脂肪酸合酶复合体催化；β-氧化才在线粒体基质中。",
+          "tags": ["第四章 脂质代谢", "脂肪酸合成"]
+        },
+        {
+          "id": 18,
+          "type": "judge",
+          "chapter": "第六章 核酸化学",
+          "question": "DNA复制过程中，冈崎片段是在前导链上合成的。",
+          "options": {
+            "A": "正确",
+            "B": "错误"
+          },
+          "answer": "B",
+          "analysis": "冈崎片段在后随链上合成，前导链连续合成。",
+          "tags": ["第六章 核酸化学", "DNA复制"]
+        },
+        {
+          "id": 19,
+          "type": "blank",
+          "chapter": "第一章 蛋白质化学",
+          "question": "蛋白质变性时，主要破坏____结构，而不破坏____键。",
+          "options": {},
+          "clozeTemplate": "蛋白质变性时，主要破坏{{高级结构（二、三、四级）}}，而不破坏{{肽键（一级结构）}}。",
+          "answer": "高级结构（二、三、四级） / 肽键（一级结构）",
+          "analysis": "变性使空间构象改变，肽链伸展，但共价肽键不断裂，一级结构保留。",
+          "tags": ["第一章 蛋白质化学", "变性"]
+        },
+        {
+          "id": 20,
+          "type": "blank",
+          "chapter": "第三章 糖代谢",
+          "question": "糖酵解中，由3-磷酸甘油醛生成1,3-二磷酸甘油酸的反应由____酶催化，该反应还生成____。",
+          "options": {},
+          "clozeTemplate": "糖酵解中，由3-磷酸甘油醛生成1,3-二磷酸甘油酸的反应由{{3-磷酸甘油醛脱氢酶}}催化，该反应还生成{{NADH+H+}}。",
+          "answer": "3-磷酸甘油醛脱氢酶 / NADH+H+",
+          "analysis": "此步是糖酵解唯一的氧化还原反应，产生NADH，为后续ATP生成奠定基础。",
+          "tags": ["第三章 糖代谢", "糖酵解"]
+        },
+        {
+          "id": 21,
+          "type": "blank",
+          "chapter": "第四章 脂质代谢",
+          "question": "酮体包括乙酰乙酸、____和____，主要在____的线粒体中合成。",
+          "options": {},
+          "clozeTemplate": "酮体包括乙酰乙酸、{{β-羟丁酸}}和{{丙酮}}，主要在{{肝脏}}的线粒体中合成。",
+          "answer": "β-羟丁酸 / 丙酮 / 肝脏",
+          "analysis": "酮体是脂酸在肝中不完全氧化生成的中间产物，供肝外组织利用。",
+          "tags": ["第四章 脂质代谢", "酮体"]
+        },
+        {
+          "id": 22,
+          "type": "blank",
+          "chapter": "第七章 蛋白质合成",
+          "question": "密码子中，起始密码子为____，对应氨基酸为____；三个终止密码子为____、____和____。",
+          "options": {},
+          "clozeTemplate": "密码子中，起始密码子为{{AUG}}，对应氨基酸为{{甲硫氨酸（真核）或甲酰甲硫氨酸（原核）}}；三个终止密码子为{{UAA}}、{{UAG}}和{{UGA}}。",
+          "answer": "AUG / 甲硫氨酸（真核）或甲酰甲硫氨酸（原核） / UAA / UAG / UGA",
+          "analysis": "起始密码子AUG既编码甲硫氨酸也作为翻译起始信号，终止密码子不编码氨基酸。",
+          "tags": ["第七章 蛋白质合成", "遗传密码"]
+        },
+        {
+          "id": 23,
+          "type": "definition",
+          "chapter": "第二章 酶学",
+          "question": "【名词解释】别构效应（变构效应）",
+          "options": {},
+          "answer": "某些效应物（别构剂）与酶分子活性中心外的别构部位非共价结合，引起酶分子构象改变，从而影响酶活性（增强或抑制）的现象。",
+          "keyPoints": ["别构部位（非活性中心）", "非共价结合", "构象改变", "活性调节"],
+          "tags": ["第二章 酶学", "调节机制"]
+        },
+        {
+          "id": 24,
+          "type": "definition",
+          "chapter": "第八章 生物氧化",
+          "question": "【名词解释】氧化还原电位",
+          "options": {},
+          "answer": "在氧化还原反应中，物质得失电子的倾向，以电极电位表示，电位越低越易失去电子（还原性），电位越高越易得到电子（氧化性）。",
+          "keyPoints": ["得失电子倾向", "电极电位", "低电位还原性强", "高电位氧化性强"],
+          "tags": ["第八章 生物氧化", "基础概念"]
+        },
+        {
+          "id": 25,
+          "type": "definition",
+          "chapter": "第六章 核酸化学",
+          "question": "【名词解释】逆转录",
+          "options": {},
+          "answer": "以RNA为模板，在逆转录酶催化下，根据碱基配对原则（A-T, U-A, G-C, C-G）合成双链DNA的过程。",
+          "keyPoints": ["RNA为模板", "逆转录酶", "合成双链DNA", "碱基互补配对"],
+          "tags": ["第六章 核酸化学", "遗传信息传递"]
+        },
+        {
+          "id": 26,
+          "type": "definition",
+          "chapter": "第五章 氨基酸代谢",
+          "question": "【名词解释】联合脱氨基作用",
+          "options": {},
+          "answer": "由转氨酶与谷氨酸脱氢酶协同作用，将氨基酸的氨基以游离氨形式脱除的过程，是体内主要脱氨基途径。",
+          "keyPoints": ["转氨酶+谷氨酸脱氢酶", "生成游离氨", "主要途径", "α-酮戊二酸参与"],
+          "tags": ["第五章 氨基酸代谢", "脱氨基"]
+        },
+        {
+          "id": 27,
+          "type": "essay",
+          "chapter": "第三章 糖代谢",
+          "question": "【简答题】简述磷酸戊糖途径的主要生理意义。",
+          "options": {},
+          "answer": "1. 产生NADPH：为脂肪酸合成、胆固醇合成及维持谷胱甘肽还原状态提供还原当量，保护细胞免受氧化损伤；\n2. 生成核糖-5-磷酸：为核苷酸和核酸的合成提供原料；\n3. 该途径的中间产物可与糖酵解途径联系，实现糖代谢的灵活调节。",
+          "keyPoints": ["生成NADPH（供合成与抗氧化）", "产生核糖-5-磷酸（合成核酸）", "与糖酵解联系", "调节血糖及还原力平衡"],
+          "tags": ["第三章 糖代谢", "磷酸戊糖途径"]
+        },
+        {
+          "id": 28,
+          "type": "essay",
+          "chapter": "第六章 核酸化学",
+          "question": "【论述题】试述原核生物DNA复制的主要过程及参与的关键酶。",
+          "options": {},
+          "answer": "1. 起始：DnaA蛋白识别复制起点，DNA双链解开形成复制叉，DnaB（解旋酶）和单链结合蛋白参与；\n2. 引物合成：引物酶催化合成RNA引物，提供游离3'-OH；\n3. 链延伸：DNA聚合酶III在引物3'端添加脱氧核苷酸，前导链连续合成，后随链合成冈崎片段；\n4. 引物切除与填补：DNA聚合酶I切除RNA引物并填补DNA片段；\n5. 连接：DNA连接酶封闭缺口，形成完整双链。",
+          "keyPoints": ["起始（DnaA, 解旋酶）", "引物合成", "聚合酶III延伸", "聚合酶I切除引物", "连接酶连接"],
+          "tags": ["第六章 核酸化学", "DNA复制"]
+        },
+        {
+          "id": 29,
+          "type": "essay",
+          "chapter": "第四章 脂质代谢",
+          "question": "【简答题】简述胆固醇在体内的转变途径与生理功能。",
+          "options": {},
+          "answer": "1. 转变为胆汁酸：在肝脏中转化为初级胆汁酸，是胆固醇的主要去路，促进脂类消化吸收；\n2. 转变为类固醇激素：在肾上腺皮质、性腺等合成醛固酮、皮质醇、雄激素、雌激素等，调节代谢与生殖；\n3. 转变为维生素D3前体（7-脱氢胆固醇）：皮肤经紫外线照射生成维生素D3，调节钙磷代谢；\n4. 作为细胞膜成分：参与构成生物膜，维持膜流动性。",
+          "keyPoints": ["胆汁酸（消化脂类）", "类固醇激素（调节）", "维生素D3前体（钙磷）", "细胞膜组分"],
+          "tags": ["第四章 脂质代谢", "胆固醇代谢"]
+        },
+        {
+          "id": 30,
+          "type": "essay",
+          "chapter": "第七章 基因表达调控",
+          "question": "【论述题】论述乳糖操纵子的调控机制及其在基因表达中的意义。",
+          "options": {},
+          "answer": "乳糖操纵子由调节基因（编码阻遏蛋白）、启动子、操纵基因和三个结构基因（lacZ、lacY、lacA）组成。\n1. 当无乳糖时，阻遏蛋白结合操纵基因，阻止RNA聚合酶转录结构基因；\n2. 当有乳糖时，乳糖经透性酶进入细胞，转化为异乳糖作为诱导物，与阻遏蛋白结合致其构象改变，脱离操纵基因，RNA聚合酶可启动转录；\n3. 该调控属于负调控，同时受葡萄糖效应（CAP-cAMP正调控）协同，确保优先利用葡萄糖；\n4. 意义：使细菌能根据环境碳源适应性表达代谢酶，是原核基因表达调控的经典模型。",
+          "keyPoints": ["阻遏蛋白结合操纵基因（负调控）", "诱导物（异乳糖）解除阻遏", "CAP-cAMP正调控（葡萄糖效应）", "适应性表达酶", "经典模型"],
+          "tags": ["第七章 基因表达调控", "原核调控"]
+        }
+      ]
+    }
+  ],
+  "wrongBooks": [
+    {
+      "bankName": "生物化学核心考点双轨题库",
+      "data": {
+        "4": {
+          "id": 4,
+          "count": 3,
+          "lastWrongAt": 1788750000000,
+          "streakCorrect": 1,
+          "type": "single"
+        },
+        "6": {
+          "id": 6,
+          "count": 2,
+          "lastWrongAt": 1788780000000,
+          "streakCorrect": 0,
+          "type": "single"
+        },
+        "12": {
+          "id": 12,
+          "count": 2,
+          "lastWrongAt": 1788790000000,
+          "streakCorrect": 0,
+          "type": "multiple"
+        },
+        "16": {
+          "id": 16,
+          "count": 1,
+          "lastWrongAt": 1788800000000,
+          "streakCorrect": 2,
+          "type": "judge"
+        }
+      }
+    }
+  ],
+  "masteredBooks": [
+    {
+      "bankName": "生物化学核心考点双轨题库",
+      "data": [1, 2, 3, 5, 7, 8, 9, 10, 15, 17, 18, 19, 23]
+    }
+  ],
+  "dailyLogs": [
+    {
+      "date": "2026-08-25",
+      "totalCount": 20,
+      "reviewCount": 10,
+      "correctCount": 18,
+      "timeSpentSeconds": 480
+    },
+    {
+      "date": "2026-08-26",
+      "totalCount": 25,
+      "reviewCount": 12,
+      "correctCount": 23,
+      "timeSpentSeconds": 620
+    },
+    {
+      "date": "2026-08-27",
+      "totalCount": 18,
+      "reviewCount": 8,
+      "correctCount": 16,
+      "timeSpentSeconds": 410
+    },
+    {
+      "date": "2026-08-28",
+      "totalCount": 30,
+      "reviewCount": 15,
+      "correctCount": 27,
+      "timeSpentSeconds": 750
+    },
+    {
+      "date": "2026-08-29",
+      "totalCount": 22,
+      "reviewCount": 10,
+      "correctCount": 19,
+      "timeSpentSeconds": 530
+    },
+    {
+      "date": "2026-08-30",
+      "totalCount": 35,
+      "reviewCount": 18,
+      "correctCount": 32,
+      "timeSpentSeconds": 890
+    },
+    {
+      "date": "2026-08-31",
+      "totalCount": 28,
+      "reviewCount": 14,
+      "correctCount": 25,
+      "timeSpentSeconds": 670
+    },
+    {
+      "date": "2026-09-01",
+      "totalCount": 32,
+      "reviewCount": 16,
+      "correctCount": 29,
+      "timeSpentSeconds": 810
+    },
+    {
+      "date": "2026-09-02",
+      "totalCount": 40,
+      "reviewCount": 20,
+      "correctCount": 37,
+      "timeSpentSeconds": 960
+    },
+    {
+      "date": "2026-09-03",
+      "totalCount": 24,
+      "reviewCount": 12,
+      "correctCount": 21,
+      "timeSpentSeconds": 590
+    },
+    {
+      "date": "2026-09-04",
+      "totalCount": 36,
+      "reviewCount": 18,
+      "correctCount": 33,
+      "timeSpentSeconds": 880
+    },
+    {
+      "date": "2026-09-05",
+      "totalCount": 29,
+      "reviewCount": 15,
+      "correctCount": 26,
+      "timeSpentSeconds": 720
+    },
+    {
+      "date": "2026-09-06",
+      "totalCount": 42,
+      "reviewCount": 22,
+      "correctCount": 39,
+      "timeSpentSeconds": 1050
+    },
+    {
+      "date": "2026-09-07",
+      "totalCount": 38,
+      "reviewCount": 20,
+      "correctCount": 35,
+      "timeSpentSeconds": 920
+    },
+    {
+      "date": "2026-09-08",
+      "totalCount": 16,
+      "reviewCount": 8,
+      "correctCount": 15,
+      "timeSpentSeconds": 380
+    }
+  ],
+  "ankiCards": [
+    {
+      "cardId": "生物化学核心考点双轨题库_19",
+      "bankName": "生物化学核心考点双轨题库",
+      "questionId": 19,
+      "easeFactor": 2.6,
+      "interval": 6,
+      "repetitions": 3,
+      "dueDate": 1789400000000,
+      "lastReviewedAt": 1788800000000,
+      "status": "review"
+    },
+    {
+      "cardId": "生物化学核心考点双轨题库_20",
+      "bankName": "生物化学核心考点双轨题库",
+      "questionId": 20,
+      "easeFactor": 2.5,
+      "interval": 3,
+      "repetitions": 2,
+      "dueDate": 1789100000000,
+      "lastReviewedAt": 1788800000000,
+      "status": "review"
+    },
+    {
+      "cardId": "生物化学核心考点双轨题库_21",
+      "bankName": "生物化学核心考点双轨题库",
+      "questionId": 21,
+      "easeFactor": 2.4,
+      "interval": 1,
+      "repetitions": 1,
+      "dueDate": 1788880000000,
+      "lastReviewedAt": 1788790000000,
+      "status": "learning"
+    },
+    {
+      "cardId": "生物化学核心考点双轨题库_23",
+      "bankName": "生物化学核心考点双轨题库",
+      "questionId": 23,
+      "easeFactor": 2.7,
+      "interval": 14,
+      "repetitions": 4,
+      "dueDate": 1790100000000,
+      "lastReviewedAt": 1788800000000,
+      "status": "mastered"
+    },
+    {
+      "cardId": "生物化学核心考点双轨题库_27",
+      "bankName": "生物化学核心考点双轨题库",
+      "questionId": 27,
+      "easeFactor": 2.5,
+      "interval": 2,
+      "repetitions": 1,
+      "dueDate": 1788850000000,
+      "lastReviewedAt": 1788670000000,
+      "status": "review"
+    }
+  ]
+}

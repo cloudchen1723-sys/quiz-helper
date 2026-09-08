@@ -152,20 +152,20 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
   }, [trackQuestions, wrongBook, config, activeTrack, dueSummary]);
 
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl shadow-xs p-5 md:p-7 max-w-2xl mx-auto w-full my-auto animate-in fade-in duration-150">
+    <div className="things-card p-6 md:p-8 max-w-2xl mx-auto w-full my-auto animate-in fade-in duration-150 border border-[#dfe3e8]/70">
       {/* 头部标题与返回 */}
-      <div className="flex items-center justify-between gap-3 mb-5 pb-3 border-b border-stone-100">
+      <div className="flex items-center justify-between gap-3 mb-5 pb-3 border-b border-[#dfe3e8]/70">
         <div className="flex items-center space-x-2.5">
           <button
             onClick={onBack}
-            className="text-stone-400 hover:text-stone-800 p-1.5 rounded-lg hover:bg-stone-100 transition-colors"
+            className="text-[#838b96] hover:text-[#303336] p-1.5 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer"
             title="返回"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h2 className="text-base sm:text-lg font-bold text-stone-900">{bankName}</h2>
-            <div className="flex items-center space-x-2 text-xs text-stone-400 mt-0.5">
+            <h2 className="text-[17px] font-bold text-[#303336] tracking-tight">{bankName}</h2>
+            <div className="flex items-center space-x-2 text-xs text-[#838b96] mt-0.5">
               <span>共 {questions.length} 题</span>
               {stats.chaptersCount ? <span>• {stats.chaptersCount} 个章节</span> : null}
             </div>
@@ -175,7 +175,7 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
         {onBrowse && (
           <button
             onClick={onBrowse}
-            className="text-xs text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 px-3 py-1.5 rounded-xl font-medium transition-colors flex items-center space-x-1 shrink-0"
+            className="text-xs text-[#55606e] hover:text-[#303336] bg-[#f2f5f7] hover:bg-[#e4e8ec] px-3.5 py-1.5 rounded-xl font-medium transition-colors flex items-center space-x-1 shrink-0 cursor-pointer"
           >
             <BookOpen className="w-3.5 h-3.5" />
             <span>浏览题库</span>
@@ -713,9 +713,9 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
       <button
         onClick={onStart}
         disabled={estimatedCount === 0}
-        className={`w-full font-semibold py-3 px-4 rounded-xl text-sm transition-all flex items-center justify-center space-x-2 shadow-xs ${
+        className={`w-full font-semibold py-3 px-4 rounded-xl text-[14px] transition-all flex items-center justify-center space-x-2 shadow-sm ${
           estimatedCount > 0
-            ? 'bg-stone-900 hover:bg-stone-800 active:scale-[0.99] text-white cursor-pointer'
+            ? 'bg-[#2576eb] hover:bg-[#1f65ca] active:scale-[0.99] text-white cursor-pointer'
             : 'bg-stone-200 text-stone-400 cursor-not-allowed'
         }`}
       >
