@@ -1,8 +1,9 @@
-import { Question, StoredBank, WrongBook, BankStats } from '../types';
+import { Question, StoredBank, WrongBook, BankStats, DailyActivityLog, AnkiCardState } from '../types';
 import { getAutoLoadedJsonBanks } from '../data/jsonBankLoader';
+import { calculateQuestionBankStats } from '../utils/textParser';
 
 const DB_NAME = 'QuestionBankCognitionDB_v3';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 export class DBManager {
   private dbPromise: Promise<IDBDatabase> | null = null;
@@ -27,6 +28,12 @@ export class DBManager {
         if (!db.objectStoreNames.contains('history')) {
           db.createObjectStore('history', { keyPath: 'id', autoIncrement: true });
         }
+        if (!db.objectStoreNames.contains('daily_logs')) {
+          db.createObjectStore('daily_logs', { keyPath: 'date' });
+        }
+        if (!db.objectStoreNames.contains('anki_cards')) {
+          db.createObjectStore('anki_cards', { keyPath: 'cardId' });
+        }
       };
 
       request.onsuccess = () => resolve(request.result);
@@ -37,7 +44,42 @@ export class DBManager {
   }
 
   async initDefaultsIfEmpty(): Promise<void> {
-    // 默认保持未加载题库状态，由用户根据需要自主选择导入或添加题库
+    try {
+      // 标记是否已执行过首次默认题库初始化，避免用户删除后被重新注入
+      const INITIALIZED_FLAG = 'exam_app_default_preset_initialized_v3';
+      const hasInitialized = localStorage.getItem(INITIALIZED_FLAG);
+
+      // 清除旧版本中残留的非核心示例题库
+      const allNames = await this.getAllBankNames();
+      const legacyExampleNames = [
+        '计算机科学与组成原理 (199题)',
+        '计算机科学导论',
+        '近代史题库',
+        '中国近现代史纲要',
+        '生物化学',
+        '生物化学核心闪卡'
+      ];
+      for (const legacy of legacyExampleNames) {
+        if (allNames.includes(legacy)) {
+          await this.deleteBank(legacy);
+        }
+      }
+
+      // 仅在首次打开且当前没有任何题库时才注入默认题库
+      if (!hasInitialized) {
+        localStorage.setItem(INITIALIZED_FLAG, 'true');
+        const currentNames = await this.getAllBankNames();
+        if (currentNames.length === 0) {
+          const presets = getAutoLoadedJsonBanks();
+          const targetPreset = presets.find(p => p.name.includes('生物化学核心考点双轨题库'));
+          if (targetPreset && targetPreset.questions.length > 0) {
+            await this.saveBank(targetPreset.name, targetPreset.questions);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('初始化内置测试题库异常:', err);
+    }
   }
 
   async getAllBankNames(): Promise<string[]> {
@@ -79,10 +121,25 @@ export class DBManager {
   async deleteBank(name: string): Promise<void> {
     const db = await this.open();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(['banks', 'wrongBooks', 'masteredBooks'], 'readwrite');
+      const tx = db.transaction(['banks', 'wrongBooks', 'masteredBooks', 'anki_cards'], 'readwrite');
       tx.objectStore('banks').delete(name);
       tx.objectStore('wrongBooks').delete(name);
       tx.objectStore('masteredBooks').delete(name);
+
+      // 同步彻底清理该题库下的所有 SM-2 闪卡排程记录，绝不残留孤立卡片
+      const ankiStore = tx.objectStore('anki_cards');
+      const req = ankiStore.openCursor();
+      req.onsuccess = (e) => {
+        const cursor = (e.target as IDBRequest<IDBCursorWithValue>).result;
+        if (cursor) {
+          const card = cursor.value as AnkiCardState;
+          if (card.bankName === name || card.cardId.startsWith(`${name}_`)) {
+            cursor.delete();
+          }
+          cursor.continue();
+        }
+      };
+
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -97,7 +154,7 @@ export class DBManager {
 
     const db = await this.open();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(['banks', 'wrongBooks', 'masteredBooks'], 'readwrite');
+      const tx = db.transaction(['banks', 'wrongBooks', 'masteredBooks', 'anki_cards'], 'readwrite');
       tx.objectStore('banks').delete(oldName);
       tx.objectStore('banks').put({ ...oldBank, name: newName });
       
@@ -109,6 +166,27 @@ export class DBManager {
         tx.objectStore('masteredBooks').delete(oldName);
         tx.objectStore('masteredBooks').put({ bankName: newName, data: oldMb });
       }
+
+      // 同步更新闪卡所属题库与卡片主键
+      const ankiStore = tx.objectStore('anki_cards');
+      const req = ankiStore.openCursor();
+      req.onsuccess = (e) => {
+        const cursor = (e.target as IDBRequest<IDBCursorWithValue>).result;
+        if (cursor) {
+          const card = cursor.value as AnkiCardState;
+          if (card.bankName === oldName || card.cardId.startsWith(`${oldName}_`)) {
+            cursor.delete();
+            const newCardId = `${newName}_${card.questionId}`;
+            ankiStore.put({
+              ...card,
+              cardId: newCardId,
+              bankName: newName
+            });
+          }
+          cursor.continue();
+        }
+      };
+
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -163,14 +241,178 @@ export class DBManager {
   }
 
   async calculateStats(questions: Question[]): Promise<BankStats> {
-    const stats: BankStats = { total: questions.length, single: 0, multiple: 0, judge: 0 };
-    questions.forEach((q) => {
-      if (q.type === 'single') stats.single++;
-      else if (q.type === 'multiple') stats.multiple++;
-      else if (q.type === 'judge') stats.judge++;
+    return calculateQuestionBankStats(questions);
+  }
+
+  // --- 模块三：每日活动快照 (DailyActivityLog) ---
+  async getDailyLog(date: string): Promise<DailyActivityLog | null> {
+    try {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('daily_logs', 'readonly');
+        const req = tx.objectStore('daily_logs').get(date);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  async getAllDailyLogs(): Promise<DailyActivityLog[]> {
+    try {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('daily_logs', 'readonly');
+        const req = tx.objectStore('daily_logs').getAll();
+        req.onsuccess = () => resolve((req.result as DailyActivityLog[]) || []);
+        req.onerror = () => reject(req.error);
+      });
+    } catch {
+      return [];
+    }
+  }
+
+  async upsertDailyLog(log: DailyActivityLog): Promise<void> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('daily_logs', 'readwrite');
+      const req = tx.objectStore('daily_logs').put(log);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
     });
-    return stats;
+  }
+
+  // --- 模块四：Anki 卡片 SM-2 调度状态 ---
+  async getAnkiCard(cardId: string): Promise<AnkiCardState | null> {
+    try {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('anki_cards', 'readonly');
+        const req = tx.objectStore('anki_cards').get(cardId);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  async saveAnkiCard(card: AnkiCardState): Promise<void> {
+    const db = await this.open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('anki_cards', 'readwrite');
+      const req = tx.objectStore('anki_cards').put(card);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async getAllAnkiCards(bankName?: string): Promise<AnkiCardState[]> {
+    try {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('anki_cards', 'readonly');
+        const req = tx.objectStore('anki_cards').getAll();
+        req.onsuccess = () => {
+          let list = (req.result as AnkiCardState[]) || [];
+          if (bankName) {
+            list = list.filter(c => c.bankName === bankName);
+          }
+          resolve(list);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    } catch {
+      return [];
+    }
+  }
+
+  async deleteAnkiCard(cardId: string): Promise<void> {
+    try {
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('anki_cards', 'readwrite');
+        tx.objectStore('anki_cards').delete(cardId);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) {
+      console.warn('deleteAnkiCard error:', e);
+    }
+  }
+
+  /**
+   * 清理已删除题库残留的孤立闪卡，确保看板统计与题库列表 100% 严密对齐
+   */
+  async cleanupOrphanAnkiCards(): Promise<void> {
+    try {
+      const allBankNames = await this.getAllBankNames();
+      const bankNamesSet = new Set(allBankNames);
+      const db = await this.open();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('anki_cards', 'readwrite');
+        const store = tx.objectStore('anki_cards');
+        const req = store.openCursor();
+        req.onsuccess = (e) => {
+          const cursor = (e.target as IDBRequest<IDBCursorWithValue>).result;
+          if (cursor) {
+            const card = cursor.value as AnkiCardState;
+            // 若卡片所属的题库已被用户删除，则立即销毁该卡片
+            if (!card.bankName || !bankNamesSet.has(card.bankName)) {
+              cursor.delete();
+            }
+            cursor.continue();
+          }
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) {
+      console.warn('清理孤立闪卡记录异常:', e);
+    }
+  }
+
+  /**
+   * 检查并向浏览器主动申请永久持久化存储 (Persistent Storage)
+   * 成功获得永久授权后，手机/浏览器在存储紧张时也绝不清理此 IndexedDB 数据库
+   */
+  async checkAndRequestPersistence(): Promise<{
+    persisted: boolean;
+    usage?: number;
+    quota?: number;
+  }> {
+    let persisted = false;
+    let usage = 0;
+    let quota = 0;
+
+    if (typeof navigator !== 'undefined' && navigator.storage) {
+      if (navigator.storage.persisted) {
+        persisted = await navigator.storage.persisted();
+      }
+
+      if (!persisted && navigator.storage.persist) {
+        try {
+          persisted = await navigator.storage.persist();
+        } catch {
+          persisted = false;
+        }
+      }
+
+      if (navigator.storage.estimate) {
+        try {
+          const estimate = await navigator.storage.estimate();
+          usage = estimate.usage || 0;
+          quota = estimate.quota || 0;
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    return { persisted, usage, quota };
   }
 }
 
 export const dbManager = new DBManager();
+
